@@ -1,0 +1,11 @@
+{
+  "name": "graphics",
+  "version": "1.0.0",
+  "description": "Computer Graphics Course",
+  "author": "zjd&lsc&yzh",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-connect": "^5.6.1"
+  }
+}
