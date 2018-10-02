@@ -14,7 +14,7 @@ gulp.task('reload', () => {
 });
 
 gulp.task('watch', () => {
-    gulp.watch(['./**/*.js'], ['reload']);
+    gulp.watch(['./**/*.js', './**/*.glsl*'], ['reload']);
 });
 
 gulp.task('compile', () => {
