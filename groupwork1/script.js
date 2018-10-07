@@ -104,6 +104,20 @@ function init() {
     ctx.closePath();
     ctx.fillStyle='#000000';
     ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(240,967);
+    ctx.bezierCurveTo(235,970,235,980,240,1028);
+    ctx.strokeStyle="#f3b9d5";
+    ctx.lineWidth=16;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(405,967);
+    ctx.bezierCurveTo(400,970,400,980,405,1028);
+    ctx.strokeStyle="#f3b9d5";
+    ctx.lineWidth=16;
+    ctx.stroke();
     //ctx.stroke();
     //ctx.
     //ctx.strokeStyle="blue";
