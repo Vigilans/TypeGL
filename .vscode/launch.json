@@ -10,7 +10,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
-            "url": "http://localhost:8080/quickstart"
+            "url": "http://localhost:8080/0.quickstart"
         },
         {
             "name": "QuickStart On TS",
@@ -18,15 +18,15 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
-            "url": "http://localhost:8080/quickstart_ts"
+            "url": "http://localhost:8080/0.quickstart_ts"
         },        
         {
-            "name": "groupwork1",
+            "name": "1.peppa-pig",
             "type": "chrome",
             "request": "launch",
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
-            "url": "http://localhost:8080/groupwork1"
+            "url": "http://localhost:8080/1.peppa-pig"
         },
     ]
 }

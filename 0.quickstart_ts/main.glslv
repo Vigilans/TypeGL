@@ -1,14 +1,8 @@
-precision lowp float;
+attribute vec4 a_Position;
+attribute vec4 a_Color;
+varying vec4 v_Color;
 
-// xy = vertex position in normalized device coordinates ([-1,+1] range).
-attribute vec2 vertexPositionNDC;
-
-varying vec2 vTexCoords;
-
-const vec2 scale = vec2(0.5, 0.5);
-
-void main()
-{
-    vTexCoords  = vertexPositionNDC * scale + scale; // scale vertex attribute to [0,1] range
-    gl_Position = vec4(vertexPositionNDC, 0.0, 1.0);
+void main() {
+    gl_Position = a_Position;
+    v_Color = a_Color;
 }

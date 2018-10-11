@@ -70,11 +70,9 @@ declare global {
     // 为 Array 补充方法
     interface ArrayConstructor {
         range(start: number, end: number): Array<number>;
+        add(...elements: Array<number>[]): Array<number>;
+        mul(...elements: (Array<number> | number)[]): Array<number>;
     }
-}
-
-Array.range = function(start: number, end: number) {
-    return new Array(end - start).fill(start).map((_, i) => start + i);
 }
 
 Object.assign(WebGLRenderingContext.prototype, {
@@ -130,21 +128,26 @@ Object.assign(WebGLRenderingContext.prototype, {
                 let buffer = this.createBuffer();
                 let bufferTarget = attr.bufferTarget || this.ARRAY_BUFFER;
                 let index = this.getAttribLocation(program, info.name);
-                let array = new ({
-                    [this.FLOAT]: Float32Array,
-                    [this.BYTE]:  Int8Array,
-                    [this.SHORT]: Int16Array,
-                    [this.INT]:   Int32Array,
-                    [this.UNSIGNED_BYTE]:  Uint8Array,
-                    [this.UNSIGNED_SHORT]: Uint16Array,
-                    [this.UNSIGNED_INT]:   Uint32Array 
-                })[info.type](attr.data);
+                let {type, ctor} = ((infoType: number) => {
+                    switch (infoType) {
+                        case this.UNSIGNED_BYTE:  return { type: infoType, ctor: Uint8Array };
+                        case this.UNSIGNED_SHORT: return { type: infoType, ctor: Uint16Array };
+                        case this.UNSIGNED_INT:   return { type: infoType, ctor: Uint32Array };
+                        case this.BYTE:  return { type: infoType, ctor: Int8Array };
+                        case this.SHORT: return { type: infoType, ctor: Int16Array };
+                        case this.INT:   case this.INT_VEC2:   case this.INT_VEC3:   case this.INT_VEC4:
+                            return { type: this.INT, ctor: Int32Array };
+                        case this.FLOAT: case this.FLOAT_VEC2: case this.FLOAT_VEC3: case this.FLOAT_VEC4: default:
+                            return { type: this.FLOAT, ctor: Float32Array };
+                    }
+                })(info.type);
+                let array = new ctor(attr.data);
                 this.bindBuffer(bufferTarget, buffer);
                 this.bufferData(bufferTarget, array, attr.drawType || this.STATIC_DRAW);
                 this.bindBuffer(bufferTarget, buffer);
                 this.enableVertexAttribArray(index);
                 this.vertexAttribPointer(
-                    index, attr.numComponents, info.type, attr.normalize || false, attr.stride || 0, attr.offset || 0
+                    index, attr.numComponents, type, attr.normalize || false, attr.stride || 0, attr.offset || 0
                 );
             }
         });
@@ -155,7 +158,7 @@ Object.assign(WebGLRenderingContext.prototype, {
         .forEach(info => {
             let loc = this.getUniformLocation(program, info.name);
             let isArray = (info.size > 1 && info.name.substr(-3) === "[0]");
-            let name = isArray ? info.name : info.name.slice(0, -3);
+            let name = isArray ? info.name.slice(0, -3) : info.name;
             programInfo.uniformSetters[name] = (uniform: WebGLUniformType) => {
                 let v = uniform as any;
                 switch (info.type) {
@@ -178,3 +181,16 @@ Object.assign(WebGLRenderingContext.prototype, {
         return programInfo;
     },
 })
+
+Array.range = function(start, end) {
+    return new Array(end - start).fill(start).map((_, i) => start + i);
+}
+
+Array.add = function(...elements) {
+    return elements.reduce((sum, array) => sum.map((v, i) => v + array[i]));
+}
+
+Array.mul = function(...elements) {
+    return elements.map(v => typeof v == "number" ? Array(elements.length).fill(v): v)
+        .reduce((product, array) => product.map((v, i) => v * array[i]));
+}
