@@ -3,6 +3,6 @@
         "noImplicitAny": false,
         "watch": true,
         "sourceMap": true,
-        "target": "es6"
+        "target": "es2018"
     }
 }

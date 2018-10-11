@@ -19,6 +19,14 @@
             "webRoot": "${workspaceRoot}",
             "sourceMaps": true,
             "url": "http://localhost:8080/quickstart_ts"
+        },        
+        {
+            "name": "groupwork1",
+            "type": "chrome",
+            "request": "launch",
+            "webRoot": "${workspaceRoot}",
+            "sourceMaps": true,
+            "url": "http://localhost:8080/groupwork1"
         },
     ]
 }
