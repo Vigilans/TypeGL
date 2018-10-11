@@ -1,2 +1,4 @@
 node_modules/
 *.js.map
+core/*.js*
+0.quickstart_ts/*.js*

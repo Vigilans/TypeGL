@@ -1,22 +1,4 @@
-import "./webgl-extension";
-
-type GlslType = Array<number>;
-
-export interface CanvasObject {
-    uuid: string;
-
-    gl: WebGLRenderingContext;
-
-    programInfo: ProgramInfo;
-
-    bufferInfo: {
-        attributes: Map<string, GlslType>
-    };
-
-    uniforms: Map<string, GlslType>;
-    
-    isValid?: boolean;   
-}
+import { WebGLRenderingObject, WebGLAttribute, WebGLUniformType } from "./webgl-extension";
 
 export class Canvas {
 
@@ -24,7 +6,7 @@ export class Canvas {
 
     public gl: WebGLRenderingContext;
 
-    public objectsToDraw: Array<CanvasObject>;
+    public objectsToDraw: Array<WebGLRenderingObject>;
 
     public get size() { return [this.canvas.width, this.canvas.height]; }
     public set size(size : [number, number]) { [this.canvas.width, this.canvas.height] = size; }
@@ -34,48 +16,41 @@ export class Canvas {
         this.gl = this.canvas.getContext("webgl");
     }
 
-    newObject(vertSrc: string, fragSrc: string) {
-        let vShader = this.gl.initShader(vertSrc, this.gl.VERTEX_SHADER);
-        let fShader = this.gl.initShader(fragSrc, this.gl.FRAGMENT_SHADER);
+    public newObject(
+        source: { vertSrc: string, fragSrc: string }, 
+        attributes: { [key: string]: WebGLAttribute },
+        uniforms: { [key: string]: WebGLUniformType },
+        mode: number
+    ) {
+        let object = new WebGLRenderingObject(this.gl);
+        let vShader = this.gl.initShader(source.vertSrc, this.gl.VERTEX_SHADER);
+        let fShader = this.gl.initShader(source.fragSrc, this.gl.FRAGMENT_SHADER);
         let program = this.gl.initProgram(vShader, fShader);
-        
+        object.programInfo = this.gl.createProgramInfo(program, mode);
+        object.attributes = attributes;
+        object.uniforms = uniforms;
+        return object;
     }
 
-    public newObjectByDom(vNode: string, fNode: string) {
+    public sourceByDom(vNode: string, fNode: string) {
         let [vertSrc, fragSrc] = [vNode, fNode].map(document.getElementById).map((e: HTMLScriptElement) => e.text);
-        return this.newObject(vertSrc, fragSrc);
+        return { vertSrc, fragSrc };
     }
 
-    public async newObjectByFile(vPath: string, fPath: string) {
+    public async sourceByFile(vPath: string, fPath: string) {
         let [vertSrc, fragSrc] = await Promise.all([vPath, fPath].map(async p => await (await fetch(p)).text()));
-        return this.newObject(vertSrc, fragSrc);
+        return { vertSrc, fragSrc };
     }
 
     public render() {
-        let lastUsedBufferInfo = null;
         let lastUsedProgramInfo = null;
 
         for (let obj of this.objectsToDraw) {
-            let { programInfo, bufferInfo, uniforms } = obj;
-            let bindBuffers = false;
-           
-            if (programInfo !== lastUsedProgramInfo) {
-                lastUsedProgramInfo = programInfo;
-                this.gl.useProgram(programInfo.program);
-                bindBuffers = true;
+            if (obj.programInfo !== lastUsedProgramInfo) {
+                lastUsedProgramInfo = obj.programInfo;
+                this.gl.useProgram(obj.programInfo.program);
             }
-           
-            // Setup all the needed attributes.
-            if (bindBuffers || bufferInfo != lastUsedBufferInfo) {
-                lastUsedBufferInfo = bufferInfo;
-                webglUtils.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-            }
-           
-            // Set the uniforms.
-            webglUtils.setUniforms(programInfo, uniforms);
-           
-            // Draw
-            this.gl.drawArrays(this.gl.TRIANGLES, 0, bufferInfo.numElements);
+            obj.render();
         }
     }
 }
