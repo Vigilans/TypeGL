@@ -1,5 +1,5 @@
 import { Canvas } from "../core/canvas.js";
-import "../core/figures.js"
+import "../core/2d-figures.js"
 
 async function main() {
     let canvas = new Canvas("canvas");

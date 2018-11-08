@@ -4,17 +4,23 @@ export type WebGLUniformType = number | Array<number> | WebGLArray;
 
 export interface WebGLAttribute {
     numComponents: number;
-    data: Array<number>;
-    bufferTarget?: number;
+    data?: Array<number>;
+    buffer?: WebGLBuffer;
     drawType?: number;
     normalize?: boolean;
     stride?: number;
     offset?: number;
 }
 
+export interface WebGLBufferInfo {
+    numElements: number,
+    indices?: WebGLBuffer,
+    attributes: { [key: string]: WebGLAttribute };
+}
+
 export interface WebGLProgramInfo {
     program: WebGLProgram;
-    mode: number,
+    mode?: number,
     attributeSetters: { [key: string]: (info: WebGLAttribute) => void };
     uniformSetters: { [key: string]: (info: WebGLUniformType) => void };
 }
@@ -23,38 +29,20 @@ export class WebGLRenderingObject {
 
     programInfo: WebGLProgramInfo;
 
-    attributes: { [key: string]: WebGLAttribute };
+    bufferInfo: WebGLBufferInfo;
 
     uniforms: { [key: string]: WebGLUniformType };
     
     constructor(readonly gl: WebGLRenderingContext) { } // property 'gl' is set through constructor parameter
 
-    render() {
-        let numElements: number;
-
-        // Setup all the needed attributes.
-        for (let [name, attr] of Object.entries(this.attributes)) {
-            let setter = this.programInfo.attributeSetters[name];
-            if (setter) {
-                setter(attr);
-            }
-            if (!numElements || numElements === attr.data.length / attr.numComponents) {
-                numElements = attr.data.length / attr.numComponents;
-            } else {
-                throw ("inconsistent numElements in each attribute");
-            }
+    draw() {
+        let mode = this.programInfo.mode || this.gl.TRIANGLES;
+        let numElements = this.bufferInfo.numElements;
+        if (this.bufferInfo.indices) {
+            this.gl.drawElements(mode, numElements, this.gl.UNSIGNED_SHORT, 0);
+        } else {
+            this.gl.drawArrays(mode, 0, numElements);
         }
-
-        // Set the uniforms.
-        for (let [name, uniform] of Object.entries(this.uniforms)) {
-            let setter = this.programInfo.uniformSetters[name];
-            if (setter) {
-                setter(uniform);
-            }
-        }
-        
-        // Draw
-        this.gl.drawArrays(this.programInfo.mode, 0, numElements);
     }
 }
 
@@ -64,6 +52,7 @@ declare global {
         getArrayType(type: number): typeof Int8Array | typeof Float32Array;
         initShader(code: string, type: number): WebGLShader | null;
         initProgram(vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null;
+        createBufferInfo(this: WebGLRenderingContext, attributes: { [key: string]: WebGLAttribute }) : WebGLBufferInfo;
         createProgramInfo(this: WebGLRenderingContext, program: WebGLProgram, mode: number): WebGLProgramInfo;
     }
 
@@ -115,6 +104,28 @@ Object.assign(WebGLRenderingContext.prototype, {
         }
     },
 
+    createBufferInfo(this: WebGLRenderingContext, attributes: { [key: string]: WebGLAttribute }) {
+        let bufferInfo = { attributes: attributes } as WebGLBufferInfo;
+        
+        // Set indices and numElements
+        if (bufferInfo.attributes.indices) {
+            let indicesData = bufferInfo.attributes.indices.data;
+            bufferInfo.indices = this.createBuffer();
+            this.bindBuffer(this.ELEMENT_ARRAY_BUFFER, bufferInfo.indices);
+            this.bufferData(this.ELEMENT_ARRAY_BUFFER, new Uint16Array(indicesData), this.STATIC_DRAW);
+            bufferInfo.numElements = indicesData.length;
+            delete bufferInfo.attributes.indices;
+        } else {
+            let testAttr = Object.values(attributes)[0];
+            bufferInfo.numElements = testAttr.data.length / testAttr.numComponents;
+        }
+
+        // The data feeding of attribute buffer is delayed in attr's setters
+        Object.values(bufferInfo.attributes).forEach(attr => attr.buffer = this.createBuffer());
+        
+        return bufferInfo;
+    },
+
     createProgramInfo(this: WebGLRenderingContext, program: WebGLProgram, mode: number) {
         let programInfo = {
             program, mode, attributeSetters: {}, uniformSetters: {}
@@ -125,8 +136,6 @@ Object.assign(WebGLRenderingContext.prototype, {
         .map(i => this.getActiveAttrib(program, i))
         .forEach(info => {
             programInfo.attributeSetters[info.name] = (attr: WebGLAttribute) => {
-                let buffer = this.createBuffer();
-                let bufferTarget = attr.bufferTarget || this.ARRAY_BUFFER;
                 let index = this.getAttribLocation(program, info.name);
                 let {type, ctor} = ((infoType: number) => {
                     switch (infoType) {
@@ -142,9 +151,8 @@ Object.assign(WebGLRenderingContext.prototype, {
                     }
                 })(info.type);
                 let array = new ctor(attr.data);
-                this.bindBuffer(bufferTarget, buffer);
-                this.bufferData(bufferTarget, array, attr.drawType || this.STATIC_DRAW);
-                this.bindBuffer(bufferTarget, buffer);
+                this.bindBuffer(this.ARRAY_BUFFER, attr.buffer);
+                this.bufferData(this.ARRAY_BUFFER, array, attr.drawType || this.STATIC_DRAW);
                 this.enableVertexAttribArray(index);
                 this.vertexAttribPointer(
                     index, attr.numComponents, type, attr.normalize || false, attr.stride || 0, attr.offset || 0

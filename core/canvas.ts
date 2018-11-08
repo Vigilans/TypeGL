@@ -27,7 +27,7 @@ export class Canvas {
         let fShader = this.gl.initShader(source.fragSrc, this.gl.FRAGMENT_SHADER);
         let program = this.gl.initProgram(vShader, fShader);
         object.programInfo = this.gl.createProgramInfo(program, mode);
-        object.attributes = attributes || {};
+        object.bufferInfo = this.gl.createBufferInfo(attributes);
         object.uniforms = uniforms || {};
         this.objectsToDraw.push(object);
         return object;
@@ -47,12 +47,38 @@ export class Canvas {
         this.gl.viewport(0, 0, ...this.size);
 
         let lastUsedProgramInfo = null;
+        let lastUsedBufferInfo = null;
+
         for (let obj of this.objectsToDraw) {
+            let bindBuffers = false;
+            
             if (obj.programInfo !== lastUsedProgramInfo) {
                 lastUsedProgramInfo = obj.programInfo;
                 this.gl.useProgram(obj.programInfo.program);
+                bindBuffers = true;
             }
-            obj.render();
+            
+            if (bindBuffers || obj.bufferInfo !== lastUsedBufferInfo) {
+                lastUsedBufferInfo = obj.bufferInfo;
+                // Setup all the needed attributes.
+                for (let [name, attr] of Object.entries(obj.bufferInfo.attributes)) {
+                    let setter = obj.programInfo.attributeSetters[name];
+                    if (setter) {
+                        setter(attr);
+                    }
+                }
+            }
+
+            // Set the uniforms.
+            for (let [name, uniform] of Object.entries(obj.uniforms)) {
+                let setter = obj.programInfo.uniformSetters[name];
+                if (setter) {
+                    setter(uniform);
+                }
+            }
+
+            // Draw
+            obj.draw();
         }
     }
 
