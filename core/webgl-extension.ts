@@ -4,7 +4,7 @@ export type WebGLUniformType = number | Array<number> | WebGLArray;
 
 export interface WebGLAttribute {
     numComponents: number;
-    data: ArrayLike<number>;
+    data: Array<number>;
     bufferTarget?: number;
     drawType?: number;
     normalize?: boolean;

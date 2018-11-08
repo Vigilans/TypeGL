@@ -11,9 +11,9 @@
 </head>
 <body>
     <p id = "message"></p>
-    <canvas id = "canvas" width = "800" height = "1200" style="border:10px dotted #000000; background:#ddd;"></canvas>
-    <script src="getMousePos.js"></script>
-    <script src = "script.js", onload="init()"></script>
+    <canvas id = "canvas" width = "800" height = "1200" style="position: absolute; border:10px dotted #000000; background:#ddd;", z-index: 0></canvas>
+    <canvas id = "canvas-fake" width = "800" height = "1200" style="position: absolute; border:10px dotted #000000;", z-index: 1></canvas>
+    <script src = "script.js", type = "module"></script>
 </body>
 
 </html> 

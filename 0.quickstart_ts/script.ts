@@ -1,6 +1,5 @@
 import { Canvas } from "../core/canvas.js";
-import "../core/circle.js"
-import "../core/bezier-curve.js"
+import "../core/figures.js"
 
 async function main() {
     let canvas = new Canvas("canvas");

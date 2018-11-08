@@ -57,11 +57,14 @@ export class Canvas {
     }
 
     /*
-        Input: Vec2 in [width, height]
-        Output: Vec2 in [0, 1] 
+        Input: Vec2 in [width, height] origins at top-left
+        Output: Vec2 in [-1, 1] origins at bottom-left
     */
     public normVec2D(vec: number[]): number[] {
-        return vec.map((v, i) => 2 * v / this.size[i] - 1);
+        return [
+            2 * vec[0] / this.size[0] - 1,
+            2 * (this.size[1] - vec[1]) / this.size[1] - 1
+        ];
     }
 
     /*
