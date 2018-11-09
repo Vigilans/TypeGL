@@ -1,4 +1,6 @@
 node_modules/
 *.js.map
-core/*.js*
-0.quickstart_ts/*.js*
+*.js
+!0.quickstart/*.js*
+!1.peppa-pig/getMousePos.js
+!2.i-is-fish/MV.js

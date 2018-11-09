@@ -28,5 +28,13 @@
             "sourceMaps": true,
             "url": "http://localhost:8080/1.peppa-pig"
         },
+        {
+            "name": "2.i-is-fish",
+            "type": "chrome",
+            "request": "launch",
+            "webRoot": "${workspaceRoot}",
+            "sourceMaps": true,
+            "url": "http://localhost:8080/2.i-is-fish"
+        },
     ]
 }
