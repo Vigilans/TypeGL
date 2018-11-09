@@ -4,6 +4,7 @@ export type WebGLUniformType = number | Array<number> | WebGLArray;
 
 export interface WebGLAttribute {
     numComponents: number;
+    type?: string | WebGLArray;
     data?: Array<number>;
     buffer?: WebGLBuffer;
     drawType?: number;
@@ -81,7 +82,8 @@ Object.assign(WebGLRenderingContext.prototype, {
         if (this.getShaderParameter(shader, this.COMPILE_STATUS)){               
             return shader; // 编译成功，返回着色器
         } else { 
-            console.log(this.getShaderInfoLog(shader));
+            console.log("SHADER " + this.getShaderInfoLog(shader));
+            console.log("code: " + code);
             this.deleteShader(shader);
             return null;   // 编译失败，打印错误消息
         }
@@ -121,7 +123,13 @@ Object.assign(WebGLRenderingContext.prototype, {
         }
 
         // The data feeding of attribute buffer is delayed in attr's setters
-        Object.values(bufferInfo.attributes).forEach(attr => attr.buffer = this.createBuffer());
+        for (let [name, attr] of Object.entries(bufferInfo.attributes)) {
+            attr.buffer = this.createBuffer();
+            if (!name.startsWith("a_")) {
+                name = `a_${name[0].toUpperCase()}${name.slice(1)}`;
+            }
+            bufferInfo.attributes[name] = attr;
+        }
         
         return bufferInfo;
     },
@@ -150,6 +158,9 @@ Object.assign(WebGLRenderingContext.prototype, {
                             return { type: this.FLOAT, ctor: Float32Array };
                     }
                 })(info.type);
+                if (attr.type) {
+                    ctor = typeof attr.type === "string" ? eval(attr.type) : attr.type;
+                }
                 let array = new ctor(attr.data);
                 this.bindBuffer(this.ARRAY_BUFFER, attr.buffer);
                 this.bufferData(this.ARRAY_BUFFER, array, attr.drawType || this.STATIC_DRAW);

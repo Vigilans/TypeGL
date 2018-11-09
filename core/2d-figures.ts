@@ -11,8 +11,6 @@ declare module "./canvas.js" {
     }
 }
 
-let ctx = (document.getElementById("canvas-fake") as HTMLCanvasElement).getContext("2d");
-
 Object.assign(Canvas.prototype, {
 
     drawFigure(
@@ -96,18 +94,6 @@ Object.assign(Canvas.prototype, {
     },
 
     drawBezierCurve(this: Canvas, points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke") {
-        if (mode == "stroke") {
-            ctx.strokeStyle = color as string;
-            ctx.beginPath();
-            ctx.moveTo(...points[0]);
-            ctx.bezierCurveTo(
-                points[1][0], points[1][1],
-                points[2][0], points[2][1],
-                points[3][0], points[3][1],
-            );
-            ctx.stroke();
-            return new WebGLRenderingObject(this.gl);
-        }
         let numVertexes = 100;
         let attributes = {
             a_Position: {
@@ -127,7 +113,7 @@ Object.assign(Canvas.prototype, {
         return this.drawFigure(color, mode, attributes);
     },
 
-    setLineThickness(thickness: number) {
-        ctx.lineWidth = thickness;
+    setLineThickness(this: Canvas, thickness: number) {
+        this.gl.lineWidth(thickness);
     },
 });

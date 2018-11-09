@@ -18,7 +18,7 @@ export class Canvas {
 
     public newObject(
         source: { vertSrc: string, fragSrc: string }, 
-        mode: number,
+        mode?: number,
         attributes?: { [key: string]: WebGLAttribute },
         uniforms?: { [key: string]: WebGLUniformType },
     ) {
@@ -43,43 +43,55 @@ export class Canvas {
         return { vertSrc, fragSrc };
     }
 
-    public render() {
+    public render(callback?: any, anime?: boolean) {
         this.gl.viewport(0, 0, ...this.size);
 
-        let lastUsedProgramInfo = null;
-        let lastUsedBufferInfo = null;
-
-        for (let obj of this.objectsToDraw) {
-            let bindBuffers = false;
-            
-            if (obj.programInfo !== lastUsedProgramInfo) {
-                lastUsedProgramInfo = obj.programInfo;
-                this.gl.useProgram(obj.programInfo.program);
-                bindBuffers = true;
+        let mainLoop = () => {
+            if (callback) {
+                callback(this);
             }
-            
-            if (bindBuffers || obj.bufferInfo !== lastUsedBufferInfo) {
-                lastUsedBufferInfo = obj.bufferInfo;
-                // Setup all the needed attributes.
-                for (let [name, attr] of Object.entries(obj.bufferInfo.attributes)) {
-                    let setter = obj.programInfo.attributeSetters[name];
-                    if (setter) {
-                        setter(attr);
+
+            let lastUsedProgramInfo = null;
+            let lastUsedBufferInfo = null;
+    
+            for (let obj of this.objectsToDraw) {
+                let bindBuffers = false;
+                
+                if (obj.programInfo !== lastUsedProgramInfo) {
+                    lastUsedProgramInfo = obj.programInfo;
+                    this.gl.useProgram(obj.programInfo.program);
+                    bindBuffers = true;
+                }
+                
+                if (bindBuffers || obj.bufferInfo !== lastUsedBufferInfo) {
+                    lastUsedBufferInfo = obj.bufferInfo;
+                    // Setup all the needed attributes.
+                    for (let [name, attr] of Object.entries(obj.bufferInfo.attributes)) {
+                        let setter = obj.programInfo.attributeSetters[name];
+                        if (setter) {
+                            setter(attr);
+                        }
                     }
                 }
-            }
-
-            // Set the uniforms.
-            for (let [name, uniform] of Object.entries(obj.uniforms)) {
-                let setter = obj.programInfo.uniformSetters[name];
-                if (setter) {
-                    setter(uniform);
+    
+                // Set the uniforms.
+                for (let [name, uniform] of Object.entries(obj.uniforms)) {
+                    let setter = obj.programInfo.uniformSetters[name];
+                    if (setter) {
+                        setter(uniform);
+                    }
                 }
+    
+                // Draw
+                obj.draw();
             }
 
-            // Draw
-            obj.draw();
+            if (anime) {
+                requestAnimationFrame(mainLoop);
+            }
         }
+
+        mainLoop();
     }
 
     /*
