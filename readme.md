@@ -24,15 +24,15 @@
 
 ## Project Structure
 
-关于环境开发与项目架构的详细文档，请移步 #1。
+关于环境开发与项目架构的详细文档，请移步 [#1](https://github.com/Vigilans/CG-18-19-2/issues/1)。
 
-* /core:
+* [/core](../../tree/master/core):
   `webgl-extension.ts` -- 对 WebGL 的浅浅 API 以扩展的形式添加一层高级封装。 
   `canvas.ts` -- 对 WebGL 与 Canvas 上下文环境的完整封装。
   `2d-figures.ts` -- 对 `Canvas` 类进行 2D 绘图的扩展。 
-* /defense: 最终的研讨 PPT 文件夹。
-* /0.quickstart: 只用原生 API 简单地跑通 WebGL 环境。
-* /0.quickstart_ts: 利用 /core 里封装的 API，简单画了几种 2D 图形。
-* /1.peppa-pig: 第一次研讨，画了小猪佩奇，详见 #2。
-* /2.i-is-fish: 第二次研讨，画了两种3D鱼(TODO: 画第三个)，详见 #3。
+* [/defense](../../tree/master/defense): 最终的研讨 PPT 文件夹。
+* [/0.quickstart](../../tree/master/0.quickstart): 只用原生 API 简单地跑通 WebGL 环境。
+* [/0.quickstart_ts](../../tree/master/0.quickstart_ts): 利用 /core 里封装的 API，简单画了几种 2D 图形。
+* [/1.peppa-pig](../../tree/master/1.peppa-pig): 第一次研讨，画了小猪佩奇，详见 [#2](https://github.com/Vigilans/CG-18-19-2/issues/2)。
+* [/2.i-is-fish](../../tree/master/2.i-is-fish): 第二次研讨，画了两种3D鱼(TODO: 画第三个)，详见 [#3](https://github.com/Vigilans/CG-18-19-2/issues/3)。
 
