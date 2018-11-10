@@ -4,17 +4,22 @@ let os = require('os')
 
 gulp.task('connect', () => 
     connect.server({
-        root: './',
+        root: './dist',
         livereload: true
     })
 );
 
 gulp.task('reload', () => {
-    return gulp.src('./**/*.html').pipe(connect.reload());
+    return gulp.src('./dist/**/*.html').pipe(connect.reload());
+});
+
+gulp.task('copy', () => {
+    gulp.src('./@(core|\d.+)/**/*@(html|js|json|glsl?)').pipe(gulp.dest('./dist'));
 });
 
 gulp.task('watch', () => {
-    gulp.watch(['./**/*.js', './**/*.glsl*'], ['reload']);
+    gulp.watch(['./@(core|\d.+)/**/*.@(html|js|json|glsl?)'], ['copy']);
+    gulp.watch(['./dist/**/*.@(html|js|json|glsl?)'], ['reload']);
 });
 
 gulp.task('compile', () => {
