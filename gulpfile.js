@@ -14,11 +14,11 @@ gulp.task('reload', () => {
 });
 
 gulp.task('copy', () => {
-    gulp.src('./@(core|\d.+)/**/*@(html|js|json|glsl?)').pipe(gulp.dest('./dist'));
+    gulp.src('./@(core|+([0123456789]).+(?))/**/*.@(html|js|json|glsl?)').pipe(gulp.dest('./dist'));
 });
 
 gulp.task('watch', () => {
-    gulp.watch(['./@(core|\d.+)/**/*.@(html|js|json|glsl?)'], ['copy']);
+    gulp.watch(['./@(core|+([0123456789]).+(?))/**/*.@(html|js|json|glsl?)'], ['copy']);
     gulp.watch(['./dist/**/*.@(html|js|json|glsl?)'], ['reload']);
 });
 
@@ -38,4 +38,4 @@ gulp.task('compile', () => {
     return child;
 });
 
-gulp.task('default', ['connect', 'watch', 'compile']);
+gulp.task('default', ['connect', 'copy', 'watch', 'compile']);
