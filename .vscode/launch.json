@@ -8,7 +8,7 @@
             "name": "QuickStart",
             "type": "chrome",
             "request": "launch",
-            "webRoot": "${workspaceRoot}",
+            "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
             "url": "http://localhost:8080/0.quickstart"
         },
@@ -16,7 +16,7 @@
             "name": "QuickStart On TS",
             "type": "chrome",
             "request": "launch",
-            "webRoot": "${workspaceRoot}",
+            "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
             "url": "http://localhost:8080/0.quickstart_ts"
         },        
@@ -24,7 +24,7 @@
             "name": "1.peppa-pig",
             "type": "chrome",
             "request": "launch",
-            "webRoot": "${workspaceRoot}",
+            "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
             "url": "http://localhost:8080/1.peppa-pig"
         },
@@ -32,7 +32,7 @@
             "name": "2.i-is-fish",
             "type": "chrome",
             "request": "launch",
-            "webRoot": "${workspaceRoot}",
+            "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
             "url": "http://localhost:8080/2.i-is-fish"
         },
