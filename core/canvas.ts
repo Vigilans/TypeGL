@@ -46,14 +46,14 @@ export class Canvas {
     public render(callback?: any, anime?: boolean) {
         this.gl.viewport(0, 0, ...this.size);
 
+        let lastUsedProgramInfo = null;
+        let lastUsedBufferInfo = null;
+
         let mainLoop = () => {
             if (callback) {
                 callback(this);
             }
 
-            let lastUsedProgramInfo = null;
-            let lastUsedBufferInfo = null;
-    
             for (let obj of this.objectsToDraw) {
                 let bindBuffers = false;
                 
@@ -114,11 +114,11 @@ export class Canvas {
             return (rgb as number[]).map(v => v / 255);
         } else if (typeof rgb == "string") {
             let strRgb = rgb as string;
-            let sharpReg = /#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})/i;
+            let hashReg = /#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})/i;
             let rgbReg = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/;
             switch (true) {
-                case sharpReg.test(strRgb):
-                    return this.normRgb(sharpReg.exec(strRgb).slice(1).map(v => Number(`0x${v}`)));
+                case hashReg.test(strRgb):
+                    return this.normRgb(hashReg.exec(strRgb).slice(1).map(v => Number(`0x${v}`)));
                 case rgbReg.test(strRgb):
                     return this.normRgb(rgbReg.exec(strRgb).slice(1).map(Number));
                 default:
