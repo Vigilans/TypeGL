@@ -1,6 +1,6 @@
 let gulp = require('gulp');
 let connect = require('gulp-connect');
-let os = require('os')
+let os = require('os');
 
 gulp.task('connect', () => 
     connect.server({
@@ -19,7 +19,7 @@ gulp.task('copy', () => {
 
 gulp.task('watch', () => {
     gulp.watch(['./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])'], ['copy']);
-    gulp.watch(['./dist/**/*.@(html|js|json|glsl?)'], ['reload']);
+    gulp.watch(['./dist/**/*.@(html|js|json|glsl[vf])'], ['reload']);
 });
 
 gulp.task('compile', () => {

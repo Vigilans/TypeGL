@@ -1,11 +1,13 @@
 export type WebGLArray = Float32Array | Float64Array | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray
 
+export type WebGLArrayConstructor = new (data: number[]) => WebGLArray;
+
 export type WebGLUniformType = number | Array<number> | WebGLArray;
 
 export interface WebGLAttribute {
     numComponents: number;
-    type?: string | WebGLArray;
-    data?: Array<number>;
+    data: Array<number> | WebGLArray;
+    type?: WebGLArrayConstructor | string;
     buffer?: WebGLBuffer;
     drawType?: number;
     normalize?: boolean;
@@ -82,8 +84,7 @@ Object.assign(WebGLRenderingContext.prototype, {
         if (this.getShaderParameter(shader, this.COMPILE_STATUS)){               
             return shader; // 编译成功，返回着色器
         } else { 
-            console.log("SHADER " + this.getShaderInfoLog(shader));
-            console.log("code: " + code);
+            console.log(`SHADER ${this.getShaderInfoLog(shader)}, code: ${code}`);
             this.deleteShader(shader);
             return null;   // 编译失败，打印错误消息
         }
@@ -124,7 +125,17 @@ Object.assign(WebGLRenderingContext.prototype, {
 
         // The data feeding of attribute buffer is delayed in attr's setters
         for (let [name, attr] of Object.entries(bufferInfo.attributes)) {
+            if (!attr.type) { // default to Float32
+                attr.type = Float32Array;
+            } else if (typeof attr.type == "string") { // deserializing
+                attr.type = eval(attr.type) as WebGLArrayConstructor; 
+            }
+            if (attr.data instanceof Array) { // standardlize
+                attr.data = new attr.type(attr.data);
+            }
             attr.buffer = this.createBuffer();
+            this.bindBuffer(this.ARRAY_BUFFER, attr.buffer);
+            this.bufferData(this.ARRAY_BUFFER, attr.data, attr.drawType || this.STATIC_DRAW);
             if (!name.startsWith("a_")) {
                 name = `a_${name[0].toUpperCase()}${name.slice(1)}`;
             }
@@ -145,25 +156,18 @@ Object.assign(WebGLRenderingContext.prototype, {
         .forEach(info => {
             programInfo.attributeSetters[info.name] = (attr: WebGLAttribute) => {
                 let index = this.getAttribLocation(program, info.name);
-                let {type, ctor} = ((infoType: number) => {
-                    switch (infoType) {
-                        case this.UNSIGNED_BYTE:  return { type: infoType, ctor: Uint8Array };
-                        case this.UNSIGNED_SHORT: return { type: infoType, ctor: Uint16Array };
-                        case this.UNSIGNED_INT:   return { type: infoType, ctor: Uint32Array };
-                        case this.BYTE:  return { type: infoType, ctor: Int8Array };
-                        case this.SHORT: return { type: infoType, ctor: Int16Array };
-                        case this.INT:   case this.INT_VEC2:   case this.INT_VEC3:   case this.INT_VEC4:
-                            return { type: this.INT, ctor: Int32Array };
-                        case this.FLOAT: case this.FLOAT_VEC2: case this.FLOAT_VEC3: case this.FLOAT_VEC4: default:
-                            return { type: this.FLOAT, ctor: Float32Array };
-                    }
-                })(info.type);
-                if (attr.type) {
-                    ctor = typeof attr.type === "string" ? eval(attr.type) : attr.type;
+                let type: number;
+                switch (true) {
+                    case attr.data instanceof Int8Array:   type = this.BYTE; break;
+                    case attr.data instanceof Uint8Array:  type = this.UNSIGNED_BYTE; break;
+                    case attr.data instanceof Int16Array:  type = this.SHORT; break;
+                    case attr.data instanceof Uint16Array: type = this.UNSIGNED_SHORT; break;
+                    case attr.data instanceof Int32Array:  type = this.INT; break;
+                    case attr.data instanceof Uint32Array: type = this.UNSIGNED_INT; break;
+                    case attr.data instanceof Float32Array:type = this.FLOAT; break;
+                    default: throw `unsupported array type: ${attr.data.constructor.name}`
                 }
-                let array = new ctor(attr.data);
                 this.bindBuffer(this.ARRAY_BUFFER, attr.buffer);
-                this.bufferData(this.ARRAY_BUFFER, array, attr.drawType || this.STATIC_DRAW);
                 this.enableVertexAttribArray(index);
                 this.vertexAttribPointer(
                     index, attr.numComponents, type, attr.normalize || false, attr.stride || 0, attr.offset || 0
