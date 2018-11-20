@@ -33,6 +33,7 @@ export class Canvas {
         return object;
     }
 
+// sourceByDom("v-shader", "f-shader")
     public sourceByDom(vNode: string, fNode: string) {
         let [vertSrc, fragSrc] = [vNode, fNode].map(document.getElementById).map((e: HTMLScriptElement) => e.text);
         return { vertSrc, fragSrc };

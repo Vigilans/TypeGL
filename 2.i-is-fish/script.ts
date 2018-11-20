@@ -1,14 +1,6 @@
 import { Canvas } from "../core/canvas.js";
 import { WebGLAttribute } from "../core/webgl-extension.js";
-import "./MV.js"
-
-declare function mat4();
-declare function flatten(v);
-declare function rotateY(theta);
-declare function rotate(theta, axis);
-declare function scalem(x, y, z);
-declare function mult(x, y);
-declare function translate(x, y, z);
+import * as MV from "../core/MV.js"
 
 interface Controller {
     rotateAngle?: number;
@@ -32,7 +24,7 @@ let ctrl: [Controller, Controller] = [{
 
 let rAngle = 0;
 let rAxis = [0, 0, 1];
-let rMatrix = mat4();
+let rMatrix = MV.mat4();
 
 let trackingMouse = false;
 let trackballMove = false;
@@ -44,17 +36,22 @@ let startX, startY;
 let c = new Canvas("canvas");
 
 let render = () => c.render((cv: Canvas) => {
-    let uniforms = cv.objectsToDraw[nowPtr].uniforms;
+    let uniforms;
+    try {
+        uniforms = cv.objectsToDraw[nowPtr].uniforms;
+    } catch (e) {
+        console.log(e);
+    }
     let ctr = ctrl[nowPtr];
-    let S = scalem(ctr.scale, ctr.scale, ctr.scale);
-    let R = rotateY(ctr.rotateAngle);
-    let T = translate(ctr.offsetX, ctr.offsetY, 0);
-    uniforms.u_MVMatrix = flatten(mult(mult(S, R), T));
+    let S = MV.scalem(ctr.scale, ctr.scale, ctr.scale);
+    let R = MV.rotateY(ctr.rotateAngle);
+    let T = MV.translate(ctr.offsetX, ctr.offsetY, 0);
+    uniforms.u_MVMatrix = MV.flatten(MV.mult(MV.mult(S, R), T));
     uniforms.u_Color = [1, 0.5, 0, 1];
 
-    rMatrix = mult(rMatrix, rotate(rAngle, rAxis));
+    rMatrix = MV.mult(rMatrix, MV.rotate(rAngle, rAxis));
     for (let { uniforms } of cv.objectsToDraw) {
-        uniforms.u_RMatrix = flatten(rMatrix);
+        uniforms.u_RMatrix = MV.flatten(rMatrix);
     }
 }, true);
 
@@ -69,8 +66,8 @@ async function main() {
         await c.sourceByFile("fish.glslv", "fish.glslf"),
         c.gl.TRIANGLES,
         aqua_fish, {
-            u_MVMatrix: flatten(scalem(0.2, 0.2, 0.2)),
-            u_RMatrix: flatten(mat4()),
+            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
+            u_RMatrix: MV.flatten(MV.mat4()),
             u_Color: [1, 0.5, 0, 1]
         }
     );
@@ -81,11 +78,30 @@ async function main() {
         await c.sourceByFile("fish.glslv", "fish.glslf"),
         c.gl.LINES,
         kun, {
-            u_MVMatrix: flatten(scalem(0.2, 0.2, 0.2)),
-            u_RMatrix: flatten(mat4()),
+            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
+            u_RMatrix:  MV.flatten(MV.mat4()),
             u_Color: [1, 0.5, 0, 1]
         }
     );
+
+    c.canvas.addEventListener("mousedown", function (event) {
+        var x = 2 * event.clientX / c.canvas.width - 1;
+        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
+        startMotion(x, y);
+    });
+
+    c.canvas.addEventListener("mouseup", function (event) {
+        var x = 2 * event.clientX / c.canvas.width - 1;
+        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
+        stopMotion(x, y);
+    });
+
+    c.canvas.addEventListener("mousemove", function (event) {
+        var x = 2 * event.clientX / c.canvas.width - 1;
+        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
+        mouseMotion(x, y);
+        render();
+    });
 
     render();
 }
@@ -195,25 +211,5 @@ function stopMotion(x, y) {
         trackballMove = false;
     }
 }
-
-
-c.canvas.addEventListener("mousedown", function (event) {
-    var x = 2 * event.clientX / c.canvas.width - 1;
-    var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
-    startMotion(x, y);
-});
-
-c.canvas.addEventListener("mouseup", function (event) {
-    var x = 2 * event.clientX / c.canvas.width - 1;
-    var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
-    stopMotion(x, y);
-});
-
-c.canvas.addEventListener("mousemove", function (event) {
-    var x = 2 * event.clientX / c.canvas.width - 1;
-    var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
-    mouseMotion(x, y);
-    render();
-});
 
 main();
