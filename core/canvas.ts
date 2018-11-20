@@ -33,7 +33,6 @@ export class Canvas {
         return object;
     }
 
-// sourceByDom("v-shader", "f-shader")
     public sourceByDom(vNode: string, fNode: string) {
         let [vertSrc, fragSrc] = [vNode, fNode].map(document.getElementById).map((e: HTMLScriptElement) => e.text);
         return { vertSrc, fragSrc };
@@ -44,16 +43,19 @@ export class Canvas {
         return { vertSrc, fragSrc };
     }
 
-    public render(callback?: any, anime?: boolean) {
+    public render(callback?: (c: Canvas, deltaTime?:number) => void, anime?: boolean) {
         this.gl.viewport(0, 0, ...this.size);
 
         let lastUsedProgramInfo = null;
         let lastUsedBufferInfo = null;
+        let then = 0.0;
 
-        let mainLoop = () => {
+        let mainLoop = (now: number) => {
+            now *= 0.001; // convert time from ms to s
             if (callback) {
-                callback(this);
+                callback(this, now - then);
             }
+            then = now;
 
             for (let obj of this.objectsToDraw) {
                 let bindBuffers = false;
@@ -92,7 +94,7 @@ export class Canvas {
             }
         }
 
-        mainLoop();
+        requestAnimationFrame(mainLoop);
     }
 
     /*

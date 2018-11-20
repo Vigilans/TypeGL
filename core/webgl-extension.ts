@@ -52,9 +52,9 @@ export class WebGLRenderingObject {
 declare global {
     // 为 WebGL Context 补充方法
     interface WebGLRenderingContext {
-        getArrayType(type: number): typeof Int8Array | typeof Float32Array;
-        initShader(code: string, type: number): WebGLShader | null;
-        initProgram(vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null;
+        getArrayType(this: WebGLRenderingContext, type: number): typeof Int8Array | typeof Float32Array;
+        initShader(this: WebGLRenderingContext, code: string, type: number): WebGLShader | null;
+        initProgram(this: WebGLRenderingContext, vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null;
         createBufferInfo(this: WebGLRenderingContext, attributes: { [key: string]: WebGLAttribute }) : WebGLBufferInfo;
         createProgramInfo(this: WebGLRenderingContext, program: WebGLProgram, mode: number): WebGLProgramInfo;
     }
@@ -123,7 +123,6 @@ Object.assign(WebGLRenderingContext.prototype, {
             bufferInfo.numElements = testAttr.data.length / testAttr.numComponents;
         }
 
-        // The data feeding of attribute buffer is delayed in attr's setters
         for (let [name, attr] of Object.entries(bufferInfo.attributes)) {
             if (!attr.type) { // default to Float32
                 attr.type = Float32Array;
