@@ -18,8 +18,8 @@ gulp.task('copy', () => {
 });
 
 gulp.task('watch', () => {
-    gulp.watch(['./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])'], ['copy']);
-    gulp.watch(['./dist/**/*.@(html|js|json|glsl[vf])'], ['reload']);
+    gulp.watch('./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])', ['copy']);
+    gulp.watch('./dist/**/*.@(html|js|json|glsl[vf])', ['reload']);
 });
 
 gulp.task('compile', () => {
@@ -33,7 +33,7 @@ gulp.task('compile', () => {
         console.log('[tsc]', chunk);
     });
     child.on('exit', function (code, signal) {
-        console.log('[tsc]', chunk);
+        console.log('[tsc]', code, signal);
     });
     return child;
 });

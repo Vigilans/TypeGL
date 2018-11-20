@@ -1,11 +1,13 @@
 import { Canvas } from "../core/canvas.js";
 import "../core/2d-figures.js"
+import { WebGLAttributeMap } from "../core/webgl-extension.js";
 
 async function main() {
     let canvas = new Canvas("canvas");
     canvas.size = [800, 600];
     
     let source = await canvas.sourceByFile("main.glslv", "main.glslf");
+
     let attributes = {
         a_Position: { 
             numComponents: 2, 
