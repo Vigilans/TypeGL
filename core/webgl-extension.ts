@@ -1,3 +1,5 @@
+import * as MV from "./MV.js";
+
 export type WebGLArray = Float32Array | Float64Array | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray
 
 export type WebGLArrayConstructor = new (data: number[]) => WebGLArray;
@@ -15,10 +17,14 @@ export interface WebGLAttribute {
     offset?: number;
 }
 
+export type WebGLAttributeMap = { [key: string]: WebGLAttribute };
+
+export type WebGLUniformMap = { [key: string]: WebGLUniformType };
+
 export interface WebGLBufferInfo {
     numElements: number,
     indices?: WebGLBuffer,
-    attributes: { [key: string]: WebGLAttribute };
+    attributes: WebGLAttributeMap;
 }
 
 export interface WebGLProgramInfo {
@@ -34,9 +40,14 @@ export class WebGLRenderingObject {
 
     bufferInfo: WebGLBufferInfo;
 
-    uniforms: { [key: string]: WebGLUniformType };
+    uniforms: WebGLUniformMap;
     
-    constructor(readonly gl: WebGLRenderingContext) { } // property 'gl' is set through constructor parameter
+    constructor(readonly gl: WebGLRenderingContext) {
+        // 就算着色器中没有该uniform，也不会出错
+        this.uniforms =  {
+            u_MVMatrix: MV.flatten(this.mvMatrix)
+        };
+    }
 
     draw() {
         let mode = this.programInfo.mode || this.gl.TRIANGLES;
@@ -55,7 +66,7 @@ declare global {
         getArrayType(this: WebGLRenderingContext, type: number): typeof Int8Array | typeof Float32Array;
         initShader(this: WebGLRenderingContext, code: string, type: number): WebGLShader | null;
         initProgram(this: WebGLRenderingContext, vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null;
-        createBufferInfo(this: WebGLRenderingContext, attributes: { [key: string]: WebGLAttribute }) : WebGLBufferInfo;
+        createBufferInfo(this: WebGLRenderingContext, attributes: WebGLAttributeMap) : WebGLBufferInfo;
         createProgramInfo(this: WebGLRenderingContext, program: WebGLProgram, mode: number): WebGLProgramInfo;
     }
 
@@ -107,7 +118,7 @@ Object.assign(WebGLRenderingContext.prototype, {
         }
     },
 
-    createBufferInfo(this: WebGLRenderingContext, attributes: { [key: string]: WebGLAttribute }) {
+    createBufferInfo(this: WebGLRenderingContext, attributes: WebGLAttributeMap) {
         let bufferInfo = { attributes: attributes } as WebGLBufferInfo;
         
         // Set indices and numElements
