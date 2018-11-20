@@ -1,5 +1,33 @@
 import { Canvas } from "./canvas.js"
 import { WebGLRenderingObject, WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
+import * as MV from "./MV.js";
+
+export function getVertsOnCircle(center: MV.Vector2D, radius: number, mode: "fill" | "stroke", numCircleVerts = 10): Array<MV.Vector2D> {
+    return [
+        ...mode == "fill" ? [center] : [],
+        ...Array.range(0, numCircleVerts + 1).map(i => {
+            const rad = 2 * Math.PI * i / numCircleVerts;
+            return Array.add(center, Array.mul(radius, [Math.cos(rad), Math.sin(rad)])) as MV.Vector2D;
+        })
+    ];
+}
+
+export function getVertsOnBezierCurve(points: Array<MV.Vector2D>, numVertexes = 50): Array<MV.Vector2D> {
+    let verts = [] as Array<MV.Vector2D>;
+    for (let segStart = 0; segStart + 3 < points.length; segStart += 3) {
+        verts.push(...Array.range(0, numVertexes + 1).map(i => {
+            const t = i / numVertexes;
+            const it = 1 - t;
+            return Array.add(
+                Array.mul(points[segStart + 0], it * it * it),
+                Array.mul(points[segStart + 1], 3, t, it * it),
+                Array.mul(points[segStart + 2], 3, t * t, it),
+                Array.mul(points[segStart + 3], t * t * t)
+            ) as MV.Vector2D;
+        }));
+    }
+    return verts;
+}
 
 declare module "./canvas.js" {
     interface Canvas {
@@ -66,7 +94,7 @@ Object.assign(Canvas.prototype, {
         return this.newObject(source, this.fillOrStroke(mode), attributes, uniforms);
     },
 
-    drawTriangle(this: Canvas, points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke") {
+    drawTriangle(this: Canvas, points: Array<MV.Vector2D>, color: string | number[], mode: "fill" | "stroke") {
         let attributes = {
             a_Position: {
                 numComponents: 2,
@@ -76,38 +104,23 @@ Object.assign(Canvas.prototype, {
         return this.drawFigure(color, mode, attributes);
     },
 
-    drawCircle(this: Canvas, center: [number, number], radius: number, color: string | number[], mode: "fill" | "stroke") {
-        let numCircleVerts = 50;
+    drawCircle(this: Canvas, center: MV.Vector2D, radius: number, color: string | number[], mode: "fill" | "stroke") {
+        let verts = getVertsOnCircle(center, radius, mode);
         let attributes = {
             a_Position: {
                 numComponents: 2,
-                data: [
-                    ...mode == "fill" ? this.normVec2D(center) : [],
-                    ...[].concat(...Array.range(0, numCircleVerts + 1).map(i => {
-                        const rad = 2 * Math.PI * i / numCircleVerts;
-                        return this.normVec2D(Array.add(center, Array.mul(radius, [Math.cos(rad), Math.sin(rad)])));
-                    }))
-                ]
+                data: [].concat(...verts.map(v => this.normVec2D(v)))
             }
         };
         return this.drawFigure(color, mode, attributes);
     },
 
-    drawBezierCurve(this: Canvas, points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke") {
-        let numVertexes = 100;
+    drawBezierCurve(this: Canvas, points: Array<MV.Vector2D>, color: string | number[], mode: "fill" | "stroke") {
+        let verts = getVertsOnBezierCurve(points);
         let attributes = {
             a_Position: {
                 numComponents: 2,
-                data: [].concat(...Array.range(0, numVertexes + 1).map(i => {
-                    const t = i / numVertexes;
-                    const it = 1 - t;
-                    return this.normVec2D(Array.add(
-                        Array.mul(points[0], it * it * it),
-                        Array.mul(points[1], 3, t, it * it),
-                        Array.mul(points[2], 3, t * t, it),
-                        Array.mul(points[3], t * t * t)
-                    ));
-                }))
+                data:  [].concat(...verts.map(v => this.normVec2D(v)))
             }
         };
         return this.drawFigure(color, mode, attributes);
