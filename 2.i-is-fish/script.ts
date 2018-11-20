@@ -7,6 +7,7 @@ interface Controller {
     offsetX?: number;
     offsetY?: number;
     scale?: number;
+    offsetZ?: number;
 }
 
 let nowPtr: number = 0;
@@ -15,11 +16,13 @@ let ctrl: [Controller, Controller] = [{
     offsetX: 0,
     offsetY: 0,
     scale: 0.2,
+    offsetZ: 0
 }, {
     rotateAngle: 0,
     offsetX: 0,
     offsetY: 0,
     scale: 0.2,
+    offsetZ: 0
 }];
 
 let rAngle = 0;
@@ -35,7 +38,16 @@ let startX, startY;
 
 let c = new Canvas("canvas");
 
-let render = () => c.render((cv: Canvas) => {
+function mult2(A,B){
+    let c = [0,0,0,0];
+    for(var i = 0 ; i < A.length ; i++){
+        for(var j = 0 ; j < B.length ; j++)
+            c[i]+=A[i][j]*B[j];
+    }
+    return c;
+}
+
+let render = (anime=true) => c.render((cv: Canvas) => {
     let uniforms;
     try {
         uniforms = cv.objectsToDraw[nowPtr].uniforms;
@@ -44,8 +56,15 @@ let render = () => c.render((cv: Canvas) => {
     }
     let ctr = ctrl[nowPtr];
     let S = MV.scalem(ctr.scale, ctr.scale, ctr.scale);
+
     let R = MV.rotateY(ctr.rotateAngle);
-    let T = MV.translate(ctr.offsetX, ctr.offsetY, 0);
+    let FB = mult2(R,uniforms.u_Direction);
+    let T = MV.translate(
+                         ctr.offsetX+FB[0],
+                         ctr.offsetY+FB[1],
+                         ctr.offsetZ+FB[2]
+                        );
+    console.log(FB," asdasd ",ctr)
     uniforms.u_MVMatrix = MV.flatten(MV.mult(MV.mult(S, R), T));
     uniforms.u_Color = [1, 0.5, 0, 1];
 
@@ -53,7 +72,7 @@ let render = () => c.render((cv: Canvas) => {
     for (let { uniforms } of cv.objectsToDraw) {
         uniforms.u_RMatrix = MV.flatten(rMatrix);
     }
-}, true);
+}, anime);
 
 async function main() {
     let raw = JSON.parse(await (await fetch("aqua-fish.json")).text());
@@ -68,7 +87,8 @@ async function main() {
         aqua_fish, {
             u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
             u_RMatrix: MV.flatten(MV.mat4()),
-            u_Color: [1, 0.5, 0, 1]
+            u_Color: [1, 0.5, 0, 1],
+            u_Direction: [0, 0, 1, 1]
         }
     );
 
@@ -80,7 +100,8 @@ async function main() {
         kun, {
             u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
             u_RMatrix:  MV.flatten(MV.mat4()),
-            u_Color: [1, 0.5, 0, 1]
+            u_Color: [1, 0.5, 0, 1],
+            u_Direction: [0, 0, -1, 1]
         }
     );
 
@@ -100,7 +121,7 @@ async function main() {
         var x = 2 * event.clientX / c.canvas.width - 1;
         var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
         mouseMotion(x, y);
-        render();
+        render(false);
     });
 
     render();
@@ -119,6 +140,7 @@ document.onkeydown = function (event) {
     // ↑ 38 ↓ 40 ← 37 →39
     // z 90 c 67
     // w 87 s 83
+    // q 81 e 101
     if (e && e.keyCode == 38) {
         ctrl[nowPtr].offsetY += 0.05;
     }
@@ -143,6 +165,12 @@ document.onkeydown = function (event) {
     if (e && e.keyCode == 83) { //s 缩小
         ctrl[nowPtr].scale -= 0.005;
         if (ctrl[nowPtr].scale < 0) ctrl[nowPtr].scale = 1;
+    }
+    if (e && e.keyCode == 81){
+        ctrl[nowPtr].offsetZ += 0.05;
+    }
+    if(e && e.keyCode == 69){
+        ctrl[nowPtr].offsetZ -= 0.05;
     }
 }
 

@@ -3,6 +3,7 @@ uniform float u_time;
 uniform vec4 u_Color;
 uniform mat4 u_MVMatrix;
 uniform mat4 u_RMatrix;
+uniform vec4 u_Direction;
 
 attribute vec4 a_Position;
 attribute vec3 a_Normal;
