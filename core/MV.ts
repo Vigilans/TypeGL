@@ -1,26 +1,29 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-//  Angel.js
-//
-//////////////////////////////////////////////////////////////////////////////
-
-//----------------------------------------------------------------------------
-//
-//  Helper functions
-//
-
 function _argumentsToArray( args )
 {
     return [].concat.apply( [], Array.prototype.slice.apply(args) );
 }
 
-export class Matrix extends Array {
-    public matrix?: boolean = true;
+export interface Matrix extends Array<number[]> {
+    matrix?: boolean;
+}
+
+export type Tensor = number | Array<number> | Matrix;
+
+export function isMatrix(v: Tensor): v is Matrix {
+    return (<Matrix>v).matrix;
+}
+
+export function isVector(v: Tensor): v is Array<number> {
+    return !isMatrix(v) && Array.isArray(v);
+}
+
+export function isScalar(v: Tensor): v is number {
+    return typeof v === "number";
 }
 
 //----------------------------------------------------------------------------
 
-export function radians( degrees ) {
+export function radians( degrees: number ) {
     return degrees * Math.PI / 180.0;
 }
 
@@ -29,7 +32,7 @@ export function radians( degrees ) {
 //  Vector Constructors
 //
 
-export function vec2(...numbers)
+export function vec2(...numbers: number[])
 {
     var result = _argumentsToArray( numbers );
 
@@ -41,7 +44,7 @@ export function vec2(...numbers)
     return result.splice( 0, 2 );
 }
 
-export function vec3(...numbers)
+export function vec3(...numbers: number[])
 {
     var result = _argumentsToArray( numbers );
 
@@ -54,7 +57,7 @@ export function vec3(...numbers)
     return result.splice( 0, 3 );
 }
 
-export function vec4(...numbers)
+export function vec4(...numbers: number[])
 {
     var result = _argumentsToArray( numbers );
 
@@ -73,7 +76,7 @@ export function vec4(...numbers)
 //  Matrix Constructors
 //
 
-export function mat2(...numbers)
+export function mat2(...numbers: number[])
 {
     var v = _argumentsToArray( numbers );
 
@@ -101,7 +104,7 @@ export function mat2(...numbers)
 
 //----------------------------------------------------------------------------
 
-export function mat3(...numbers)
+export function mat3(...numbers: number[])
 {
     var v = _argumentsToArray( numbers );
 
@@ -131,7 +134,7 @@ export function mat3(...numbers)
 
 //----------------------------------------------------------------------------
 
-export function mat4(...numbers)
+export function mat4(...numbers: number[])
 {
     var v = _argumentsToArray( numbers );
 
@@ -166,11 +169,18 @@ export function mat4(...numbers)
 //  Generic Mathematical Operations for Vectors and Matrices
 //
 
-export function equal( u, v )
+export function equal( u: Tensor, v: Tensor )
 {
+    if (typeof u === "number" && typeof v === "number") {
+        return u === v;
+    } 
+    else if (typeof u === "number" || typeof v === "number") {
+        throw "trying to add number with non-number"
+    }
+
     if ( u.length != v.length ) { return false; }
 
-    if ( u.matrix && v.matrix ) {
+    if ( isMatrix(u) && isMatrix(v) ) {
         for ( var i = 0; i < u.length; ++i ) {
             if ( u[i].length != v[i].length ) { return false; }
             for ( var j = 0; j < u[i].length; ++j ) {
@@ -178,7 +188,7 @@ export function equal( u, v )
             }
         }
     }
-    else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
+    else if ( isMatrix(u) && !isMatrix(v) || !isMatrix(u) && isMatrix(v) ) {
         return false;
     }
     else {
@@ -192,15 +202,19 @@ export function equal( u, v )
 
 //----------------------------------------------------------------------------
 
-export function add( u, v )
+function add_impl( u: Matrix, v: Matrix ): Matrix;
+function add_impl( u: Array<number>, v: Array<number> ): Array<number>;
+function add_impl( u: number, v: number ): number;
+function add_impl( u, v )
 {
-    var result = [] as Matrix;
+    if ( isMatrix(u) && isMatrix(v) ) {
 
-    if ( u.matrix && v.matrix ) {
         if ( u.length != v.length ) {
             throw "add(): trying to add matrices of different dimensions";
         }
-
+    
+        let result = [] as Matrix;
+    
         for ( var i = 0; i < u.length; ++i ) {
             if ( u[i].length != v[i].length ) {
                 throw "add(): trying to add matrices of different dimensions";
@@ -210,18 +224,17 @@ export function add( u, v )
                 result[i].push( u[i][j] + v[i][j] );
             }
         }
-
+    
         result.matrix = true;
-
+    
         return result;
     }
-    else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
-        throw "add(): trying to add matrix and non-matrix variables";
-    }
-    else {
+    else if ( isVector(u) && isVector(v) ) {
         if ( u.length != v.length ) {
             throw "add(): vectors are not the same dimension";
         }
+
+        let result = [] as Array<number>;
 
         for ( var i = 0; i < u.length; ++i ) {
             result.push( u[i] + v[i] );
@@ -229,19 +242,28 @@ export function add( u, v )
 
         return result;
     }
+    else if ( isScalar(u) && isScalar(v) ) {
+        return u + v;
+    } 
+    else {
+        throw "add(): trying to add variables of different type";
+    }
 }
 
 //----------------------------------------------------------------------------
 
-export function subtract( u, v )
+function subtract_impl( u: Matrix, v: Matrix ): Matrix;
+function subtract_impl( u: Array<number>, v: Array<number> ): Array<number>;
+function subtract_impl( u: number, v: number ): number;
+function subtract_impl( u, v )
 {
-    var result = [] as Matrix;
-
-    if ( u.matrix && v.matrix ) {
+    if ( isMatrix(u) && isMatrix(v) ) {
         if ( u.length != v.length ) {
             throw "subtract(): trying to subtract matrices" +
                 " of different dimensions";
         }
+
+        let result = [] as Matrix;
 
         for ( var i = 0; i < u.length; ++i ) {
             if ( u[i].length != v[i].length ) {
@@ -258,13 +280,12 @@ export function subtract( u, v )
 
         return result;
     }
-    else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
-        throw "subtact(): trying to subtact  matrix and non-matrix variables";
-    }
-    else {
+    else if ( isVector(u) && isVector(v) ) {
         if ( u.length != v.length ) {
             throw "subtract(): vectors are not the same length";
         }
+
+        let result = [] as Array<number>;
 
         for ( var i = 0; i < u.length; ++i ) {
             result.push( u[i] - v[i] );
@@ -272,31 +293,34 @@ export function subtract( u, v )
 
         return result;
     }
+    else if ( isScalar(u) && isScalar(v) ) {
+        return u - v;
+    }
+    else {
+        throw "subtact(): trying to subtact variables of different type";
+    }
 }
 
 //----------------------------------------------------------------------------
 
-export function mult( u, v )
+function mult_impl( u: Matrix, v: Matrix ): Matrix;
+function mult_impl( u: Array<number>, v: Array<number> ): Array<number>;
+function mult_impl( u: number, v: number ): number;
+function mult_impl( u, v )
 {
-    var result = [] as Matrix;
+    if ( isMatrix(u) && isMatrix(v) ) {
 
-    if ( u.matrix && v.matrix ) {
-        if ( u.length != v.length ) {
-            throw "mult(): trying to add matrices of different dimensions";
-        }
-
-        for ( var i = 0; i < u.length; ++i ) {
-            if ( u[i].length != v[i].length ) {
-                throw "mult(): trying to add matrices of different dimensions";
-            }
-        }
+        let result = [] as Matrix;
 
         for ( var i = 0; i < u.length; ++i ) {
             result.push( [] );
 
-            for ( var j = 0; j < v.length; ++j ) {
+            for ( var j = 0; j < v[0].length; ++j ) {
                 var sum = 0.0;
-                for ( var k = 0; k < u.length; ++k ) {
+                if ( u[i].length != v.length ) {
+                    throw "mult(): trying to mult matrices that dimensions do not match";
+                }
+                for ( var k = 0; k < v.length; ++k ) {
                     sum += u[i][k] * v[k][j];
                 }
                 result[i].push( sum );
@@ -307,16 +331,60 @@ export function mult( u, v )
 
         return result;
     }
-    else {
+    else if ( isVector(u) && isVector(v) ) {
         if ( u.length != v.length ) {
             throw "mult(): vectors are not the same dimension";
         }
+
+        let result = [] as Array<number>;
 
         for ( var i = 0; i < u.length; ++i ) {
             result.push( u[i] * v[i] );
         }
 
         return result;
+    }
+    else if ( isScalar(u) && isScalar(v) ) {
+        return u * v;
+    }
+    else {
+        throw "mult(): trying to mult variables of different type"
+    }
+}
+
+export function add(...vals: number[]): number;
+export function add(...vals: Array<number>[]): Array<number>;
+export function add(...vals: Matrix[]): Matrix;
+export function add(...vals) {
+    switch ( vals.length ) {
+        case 0: return undefined;
+        case 1: return vals[0];
+        case 2: return add_impl(vals[0], vals[1]);
+        default: return add_impl(vals[0], add(...vals.slice(1)));
+    }
+}
+
+export function subtract(...vals: number[]): number;
+export function subtract(...vals: Array<number>[]): Array<number>;
+export function subtract(...vals: Matrix[]): Matrix;
+export function subtract(...vals) {
+    switch ( vals.length ) {
+        case 0: return undefined;
+        case 1: return vals[0];
+        case 2: return subtract_impl(vals[0], vals[1]);
+        default: return subtract_impl(vals[0], subtract(...vals.slice(1)));
+    }
+}
+
+export function mult(...vals: number[]): number;
+export function mult(...vals: Array<number>[]): Array<number>;
+export function mult(...vals: Matrix[]): Matrix;
+export function mult(...vals) {
+    switch ( vals.length ) {
+        case 0: return undefined;
+        case 1: return vals[0];
+        case 2: return mult_impl(vals[0], vals[1]);
+        default: return mult_impl(vals[0], mult(...vals.slice(1)));
     }
 }
 
@@ -653,7 +721,7 @@ export function scale( s, u )
 
 export function flatten( v )
 {
-    if ( v.matrix === true ) {
+    if ( isMatrix(v) ) {
         v = transpose( v );
     }
 
