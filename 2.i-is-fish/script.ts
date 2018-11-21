@@ -33,7 +33,7 @@ let trackingMouse = false;
 let trackballMove = false;
 
 let lastPos = [0, 0, 0];
-let curx, cury;
+
 let startX, startY;
 
 let c = new Canvas("canvas");
@@ -64,7 +64,7 @@ let render = (anime=true) => c.render((cv: Canvas) => {
                          ctr.offsetY+FB[1],
                          ctr.offsetZ+FB[2]
                         );
-    console.log(FB," asdasd ",ctr)
+    //console.log(FB," asdasd ",ctr)
     uniforms.u_MVMatrix = MV.flatten(MV.mult(MV.mult(S, R), T));
     uniforms.u_Color = [1, 0.5, 0, 1];
 
@@ -223,9 +223,6 @@ function startMotion(x, y) {
     trackingMouse = true;
     startX = x;
     startY = y;
-    curx = x;
-    cury = y;
-
     lastPos = trackballView(x, y);
     trackballMove = true;
 }
