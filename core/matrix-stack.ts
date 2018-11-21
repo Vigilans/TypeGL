@@ -2,7 +2,7 @@ import * as MV from "./MV.js"
 
 export class MatrixStack {
     // 存放变换矩阵的栈
-    public stack: Array<MV.Matrix>;
+    public stack: Array<MV.Matrix> = [];
 
     // 栈顶的矩阵（当前矩阵）
     public get top() { return this.stack.slice(-1)[0]; };
