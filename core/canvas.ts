@@ -1,10 +1,13 @@
 import { WebGLRenderingObject, WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
+import { MatrixStack } from "./matrix-stack.js";
 
 export class Canvas {
 
     public canvas: HTMLCanvasElement;
 
     public gl: WebGLRenderingContext;
+
+    public matrixStack: MatrixStack;
 
     public objectsToDraw: Array<WebGLRenderingObject> = [];
 
@@ -43,7 +46,7 @@ export class Canvas {
         return { vertSrc, fragSrc };
     }
 
-    public render(callback?: (c: Canvas, deltaTime?:number) => void, anime?: boolean) {
+    public render(update?: (c: Canvas, deltaTime?:number) => void, anime?: boolean) {
         this.gl.viewport(0, 0, ...this.size);
 
         let lastUsedProgramInfo = null;
@@ -52,8 +55,8 @@ export class Canvas {
 
         let mainLoop = (now: number) => {
             now *= 0.001; // convert time from ms to s
-            if (callback) {
-                callback(this, now - then);
+            if (update) {
+                update(this, now - then);
             }
             then = now;
 
@@ -98,10 +101,10 @@ export class Canvas {
     }
 
     /*
-        Input: Vec2 in [width, height] origins at top-left
-        Output: Vec2 in [-1, 1] origins at bottom-left
+        Input: Vec2 in [width, height] origining at top-left
+        Output: Vec2 in [-1, 1] of clip space origining at bottom-left
     */
-    public normVec2D(vec: number[]): number[] {
+    public normVec2D(vec: [number, number]): [number, number] {
         return [
             2 * vec[0] / this.size[0] - 1,
             2 * (this.size[1] - vec[1]) / this.size[1] - 1
