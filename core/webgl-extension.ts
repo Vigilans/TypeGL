@@ -41,12 +41,30 @@ export class WebGLRenderingObject {
     bufferInfo: WebGLBufferInfo;
 
     uniforms: WebGLUniformMap;
+
+    mvMatrix: MV.Matrix = MV.mat4(); // 初始为恒等矩阵
+
+    center: MV.Vector3D = MV.vec3(); // 初始为坐标原点
     
     constructor(readonly gl: WebGLRenderingContext) {
         // 就算着色器中没有该uniform，也不会出错
         this.uniforms =  {
             u_MVMatrix: MV.flatten(this.mvMatrix)
         };
+    }
+
+    // 直接设置MV矩阵
+    setModelView(m: MV.Matrix) {
+        this.mvMatrix = m;
+        this.center = MV.transformPoint(m, MV.vec3());
+        this.uniforms.u_MVMatrix = MV.flatten(this.mvMatrix);
+    }
+
+    // 对MV矩阵实施变换
+    transform(m: MV.Matrix) {
+        this.mvMatrix = MV.mult(m, this.mvMatrix);
+        this.center = MV.transformPoint(m, this.center);
+        this.uniforms.u_MVMatrix = MV.flatten(this.mvMatrix);
     }
 
     draw() {
