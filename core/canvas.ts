@@ -1,5 +1,6 @@
-import { WebGLRenderingObject, WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
+import { WebGLRenderingObject, WebGLAttributeMap, WebGLUniformMap } from "./webgl-extension.js";
 import { MatrixStack } from "./matrix-stack.js";
+import * as MV from "./MV.js";
 
 export class Canvas {
 
@@ -7,9 +8,11 @@ export class Canvas {
 
     public gl: WebGLRenderingContext;
 
-    public matrixStack: MatrixStack;
+    public matrixStack: MatrixStack = new MatrixStack();
 
     public objectsToDraw: Array<WebGLRenderingObject> = [];
+
+    public updatePipeline: Array<(c: Canvas, time?: number, deltaTime?: number) => void> = [];
 
     public get size() { return [this.canvas.width, this.canvas.height]; }
     public set size(size : [number, number]) { [this.canvas.width, this.canvas.height] = size; }
@@ -19,19 +22,20 @@ export class Canvas {
         this.gl = this.canvas.getContext("webgl");
     }
 
-    public newObject(
+    public newObject<T extends WebGLRenderingObject>(
         source: { vertSrc: string, fragSrc: string }, 
         mode?: number,
-        attributes?: { [key: string]: WebGLAttribute },
-        uniforms?: { [key: string]: WebGLUniformType },
+        attributes?: WebGLAttributeMap,
+        uniforms?: WebGLUniformMap,
+        destObj?: T
     ) {
-        let object = new WebGLRenderingObject(this.gl);
+        let object  = destObj || new WebGLRenderingObject(this.gl);
         let vShader = this.gl.initShader(source.vertSrc, this.gl.VERTEX_SHADER);
         let fShader = this.gl.initShader(source.fragSrc, this.gl.FRAGMENT_SHADER);
         let program = this.gl.initProgram(vShader, fShader);
         object.programInfo = this.gl.createProgramInfo(program, mode);
         object.bufferInfo = this.gl.createBufferInfo(attributes);
-        object.uniforms = uniforms || {};
+        Object.assign(object.uniforms, uniforms, {});
         this.objectsToDraw.push(object);
         return object;
     }
@@ -46,7 +50,7 @@ export class Canvas {
         return { vertSrc, fragSrc };
     }
 
-    public render(update?: (c: Canvas, deltaTime?:number) => void, anime?: boolean) {
+    public render(anime?: boolean) {
         this.gl.viewport(0, 0, ...this.size);
 
         let lastUsedProgramInfo = null;
@@ -55,8 +59,8 @@ export class Canvas {
 
         let mainLoop = (now: number) => {
             now *= 0.001; // convert time from ms to s
-            if (update) {
-                update(this, now - then);
+            for (let update of this.updatePipeline) {
+                update(this, now, then - now);
             }
             then = now;
 
@@ -140,3 +144,60 @@ export class Canvas {
         })[mode];
     }
 }
+
+// 带朝向与法线的 WebGL 渲染对象，朝向与法线均保持初始状态。
+export class WebGLOrientedObject extends WebGLRenderingObject {
+    
+    public constructor(
+        gl: WebGLRenderingContext,
+        public initDir: MV.Vector3D,
+        public initNorm: MV.Vector3D
+    ) { 
+        super(gl);
+        this.direction = initDir;
+        this.normal = initNorm;
+        this.initSideAxis = MV.normalize(MV.cross(initNorm, initDir));
+    }
+
+    // 朝向 × 法线形成的第三条轴
+    public initSideAxis: MV.Vector3D;
+
+    public direction: MV.Vector3D;
+
+    public normal: MV.Vector3D;
+
+    public get sideAxis() {  // 朝向 × 法线形成的第三条轴
+        return MV.normalize(MV.cross(this.normal, this.direction));
+    }
+
+    public get coordSystem(): [MV.Vector3D, MV.Vector3D, MV.Vector3D] {
+        return [this.normal, this.direction, this.sideAxis];
+    }
+}
+
+declare module "./canvas.js" {
+    interface Canvas {
+        newOrientedObject(
+            source: { vertSrc: string, fragSrc: string },
+            direction: MV.Vector3D,
+            normal: MV.Vector3D, 
+            mode?: number,
+            attributes?: WebGLAttributeMap,
+            uniforms?: WebGLUniformMap,
+        ): WebGLOrientedObject;
+    }
+}
+
+Object.assign(Canvas.prototype, {
+    newOrientedObject(this: Canvas,
+        source: { vertSrc: string, fragSrc: string },
+        direction: MV.Vector3D,
+        normal: MV.Vector3D, 
+        mode?: number,
+        attributes?: WebGLAttributeMap,
+        uniforms?: WebGLUniformMap,
+    ) {
+        return <WebGLOrientedObject>this.newObject(source, mode, attributes, uniforms, 
+            new WebGLOrientedObject(this.gl, direction, normal));
+    }
+});
