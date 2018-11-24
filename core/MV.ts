@@ -2,6 +2,10 @@ function _argumentsToArray(args) {
     return [].concat.apply([], Array.prototype.slice.apply(args));
 }
 
+export type Scalar = number;
+
+export type Vector = Array<number>;
+
 export type Vector2D = [number, number];
 
 export type Vector3D = [number, number, number];
@@ -38,7 +42,7 @@ export function radians(degrees: number) {
 //
 
 export function vec2(...numbers: Tensor[]) {
-    var result = _argumentsToArray(numbers);
+    let result = _argumentsToArray(numbers);
 
     switch (result.length) {
         case 0: result.push(0.0);
@@ -49,7 +53,7 @@ export function vec2(...numbers: Tensor[]) {
 }
 
 export function vec3(...numbers: Tensor[]) {
-    var result = _argumentsToArray(numbers);
+    let result = _argumentsToArray(numbers);
 
     switch (result.length) {
         case 0: result.push(0.0);
@@ -61,7 +65,7 @@ export function vec3(...numbers: Tensor[]) {
 }
 
 export function vec4(...numbers: Tensor[]) {
-    var result = _argumentsToArray(numbers);
+    let result = _argumentsToArray(numbers);
 
     switch (result.length) {
         case 0: result.push(0.0);
@@ -79,9 +83,9 @@ export function vec4(...numbers: Tensor[]) {
 //
 
 export function mat2(...numbers: Tensor[]) {
-    var v = _argumentsToArray(numbers);
+    let v = _argumentsToArray(numbers);
 
-    var m = [] as Matrix;
+    let m = [] as Matrix;
     switch (v.length) {
         case 0:
             v[0] = 1;
@@ -106,9 +110,9 @@ export function mat2(...numbers: Tensor[]) {
 //----------------------------------------------------------------------------
 
 export function mat3(...numbers: Tensor[]) {
-    var v = _argumentsToArray(numbers);
+    let v = _argumentsToArray(numbers);
 
-    var m = [] as Matrix;
+    let m = [] as Matrix;
     switch (v.length) {
         case 0:
             v[0] = 1;
@@ -135,9 +139,9 @@ export function mat3(...numbers: Tensor[]) {
 //----------------------------------------------------------------------------
 
 export function mat4(...numbers: Tensor[]) {
-    var v = _argumentsToArray(numbers);
+    let v = _argumentsToArray(numbers);
 
-    var m = [] as Matrix;
+    let m = [] as Matrix;
     switch (v.length) {
         case 0:
             v[0] = 1;
@@ -164,6 +168,36 @@ export function mat4(...numbers: Tensor[]) {
 }
 
 //----------------------------------------------------------------------------
+
+export function vec2mat(vec: Array<number>): Matrix {
+    let result = [...vec, 1.0].map(e => [e]) as Matrix;
+    result.matrix = true;
+    return result;
+}
+
+export function mat2vec(mat: Matrix): Array<number> {
+    return _argumentsToArray(mat).slice(0, -1);
+}
+
+// export function transformPoint(mat: Matrix, point: Vector3D) {
+//     return mat2vec(mult(mat, vec2mat(point))) as Vector3D;
+// }
+
+export function transformPoint(mat, vec, dst?) {
+    dst = dst || vec3();
+    const v0 = vec[0];
+    const v1 = vec[1];
+    const v2 = vec[2];
+    const m = flatten(mat);
+    const d = v0 * m[0 * 4 + 3] + v1 * m[1 * 4 + 3] + v2 * m[2 * 4 + 3] + m[3 * 4 + 3];
+  
+    dst[0] = (v0 * m[0 * 4 + 0] + v1 * m[1 * 4 + 0] + v2 * m[2 * 4 + 0] + m[3 * 4 + 0]) / d;
+    dst[1] = (v0 * m[0 * 4 + 1] + v1 * m[1 * 4 + 1] + v2 * m[2 * 4 + 1] + m[3 * 4 + 1]) / d;
+    dst[2] = (v0 * m[0 * 4 + 2] + v1 * m[1 * 4 + 2] + v2 * m[2 * 4 + 2] + m[3 * 4 + 2]) / d;
+    return dst;
+}
+
+//----------------------------------------------------------------------------
 //
 //  Generic Mathematical Operations for Vectors and Matrices
 //
@@ -179,9 +213,9 @@ export function equal(u: Tensor, v: Tensor) {
     if (u.length != v.length) { return false; }
 
     if (isMatrix(u) && isMatrix(v)) {
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             if (u[i].length != v[i].length) { return false; }
-            for (var j = 0; j < u[i].length; ++j) {
+            for (let j = 0; j < u[i].length; ++j) {
                 if (u[i][j] !== v[i][j]) { return false; }
             }
         }
@@ -190,7 +224,7 @@ export function equal(u: Tensor, v: Tensor) {
         return false;
     }
     else {
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             if (u[i] !== v[i]) { return false; }
         }
     }
@@ -212,12 +246,12 @@ function add_impl(u, v) {
 
         let result = [] as Matrix;
 
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             if (u[i].length != v[i].length) {
                 throw "add(): trying to add matrices of different dimensions";
             }
             result.push([]);
-            for (var j = 0; j < u[i].length; ++j) {
+            for (let j = 0; j < u[i].length; ++j) {
                 result[i].push(u[i][j] + v[i][j]);
             }
         }
@@ -233,7 +267,7 @@ function add_impl(u, v) {
 
         let result = [] as Array<number>;
 
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             result.push(u[i] + v[i]);
         }
 
@@ -243,7 +277,7 @@ function add_impl(u, v) {
         return u + v;
     }
     else {
-        throw "add(): trying to add variables of different type";
+        throw "add(): trying to add letiables of different type";
     }
 }
 
@@ -261,13 +295,13 @@ function subtract_impl(u, v) {
 
         let result = [] as Matrix;
 
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             if (u[i].length != v[i].length) {
                 throw "subtract(): trying to subtact matrices" +
                 " of different dimensions";
             }
             result.push([]);
-            for (var j = 0; j < u[i].length; ++j) {
+            for (let j = 0; j < u[i].length; ++j) {
                 result[i].push(u[i][j] - v[i][j]);
             }
         }
@@ -283,7 +317,7 @@ function subtract_impl(u, v) {
 
         let result = [] as Array<number>;
 
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             result.push(u[i] - v[i]);
         }
 
@@ -293,7 +327,7 @@ function subtract_impl(u, v) {
         return u - v;
     }
     else {
-        throw "subtact(): trying to subtact variables of different type";
+        throw "subtact(): trying to subtact letiables of different type";
     }
 }
 
@@ -307,15 +341,15 @@ function mult_impl(u, v) {
 
         let result = [] as Matrix;
 
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             result.push([]);
 
-            for (var j = 0; j < v[0].length; ++j) {
-                var sum = 0.0;
+            for (let j = 0; j < v[0].length; ++j) {
+                let sum = 0.0;
                 if (u[i].length != v.length) {
                     throw "mult(): trying to mult matrices that dimensions do not match";
                 }
-                for (var k = 0; k < v.length; ++k) {
+                for (let k = 0; k < v.length; ++k) {
                     sum += u[i][k] * v[k][j];
                 }
                 result[i].push(sum);
@@ -333,7 +367,7 @@ function mult_impl(u, v) {
 
         let result = [] as Array<number>;
 
-        for (var i = 0; i < u.length; ++i) {
+        for (let i = 0; i < u.length; ++i) {
             result.push(u[i] * v[i]);
         }
 
@@ -343,7 +377,7 @@ function mult_impl(u, v) {
         return u * v;
     }
     else {
-        throw "mult(): trying to mult variables of different type"
+        throw "mult(): trying to mult letiables of different type"
     }
 }
 
@@ -395,7 +429,7 @@ export function translate(x, y, z) {
         x = x[0];
     }
 
-    var result = mat4();
+    let result = mat4();
     result[0][3] = x;
     result[1][3] = y;
     result[2][3] = z;
@@ -410,17 +444,17 @@ export function rotate(angle, axis) {
         axis = [arguments[1], arguments[2], arguments[3]];
     }
 
-    var v = normalize(axis);
+    let v = normalize(axis);
 
-    var x = v[0];
-    var y = v[1];
-    var z = v[2];
+    let x = v[0];
+    let y = v[1];
+    let z = v[2];
 
-    var c = Math.cos(radians(angle));
-    var omc = 1.0 - c;
-    var s = Math.sin(radians(angle));
+    let c = Math.cos(angle);
+    let omc = 1.0 - c;
+    let s = Math.sin(angle);
 
-    var result = mat4(
+    let result = mat4(
         vec4(x * x * omc + c, x * y * omc - z * s, x * z * omc + y * s, 0.0),
         vec4(x * y * omc + z * s, y * y * omc + c, y * z * omc - x * s, 0.0),
         vec4(x * z * omc - y * s, y * z * omc + x * s, z * z * omc + c, 0.0),
@@ -431,27 +465,29 @@ export function rotate(angle, axis) {
 }
 
 export function rotateX(theta) {
-    var c = Math.cos(radians(theta));
-    var s = Math.sin(radians(theta));
-    var rx = mat4(1.0, 0.0, 0.0, 0.0,
+    let c = Math.cos(theta);
+    let s = Math.sin(theta);
+    let rx = mat4(1.0, 0.0, 0.0, 0.0,
         0.0, c, s, 0.0,
         0.0, -s, c, 0.0,
         0.0, 0.0, 0.0, 1.0);
     return rx;
 }
+
 export function rotateY(theta) {
-    var c = Math.cos(radians(theta));
-    var s = Math.sin(radians(theta));
-    var ry = mat4(c, 0.0, -s, 0.0,
+    let c = Math.cos(theta);
+    let s = Math.sin(theta);
+    let ry = mat4(c, 0.0, -s, 0.0,
         0.0, 1.0, 0.0, 0.0,
         s, 0.0, c, 0.0,
         0.0, 0.0, 0.0, 1.0);
     return ry;
 }
+
 export function rotateZ(theta) {
-    var c = Math.cos(radians(theta));
-    var s = Math.sin(radians(theta));
-    var rz = mat4(c, s, 0.0, 0.0,
+    let c = Math.cos(theta);
+    let s = Math.sin(theta);
+    let rz = mat4(c, s, 0.0, 0.0,
         -s, c, 0.0, 0.0,
         0.0, 0.0, 1.0, 0.0,
         0.0, 0.0, 0.0, 1.0);
@@ -468,7 +504,7 @@ export function scalem(x, y, z) {
         x = x[0];
     }
 
-    var result = mat4();
+    let result = mat4();
     result[0][0] = x;
     result[1][1] = y;
     result[2][2] = z;
@@ -481,7 +517,7 @@ export function scalem(x, y, z) {
 //  ModelView Matrix Generators
 //
 
-export function lookAt(eye: Vector3D, at: Vector3D, up: Vector3D) {
+export function lookAt(eye: Vector3D, at: Vector3D, up: Vector3D = [0, 1, 0]) {
     if (!Array.isArray(eye) || eye.length != 3) {
         throw "lookAt(): first parameter [eye] must be an a vec3";
     }
@@ -498,13 +534,13 @@ export function lookAt(eye: Vector3D, at: Vector3D, up: Vector3D) {
         return mat4();
     }
 
-    var v = normalize(subtract(at, eye));  // view direction vector
-    var n = normalize(cross(v, up));       // perpendicular vector
-    var u = normalize(cross(n, v));        // "new" up vector
+    let v = normalize(subtract(at, eye));  // view direction vector
+    let n = normalize(cross(v, up));       // perpendicular vector
+    let u = normalize(cross(n, v));        // "new" up vector
 
     v = negate(v);
 
-    var result = mat4(
+    let result = mat4(
         vec4(n, -dot(n, eye)),
         vec4(u, -dot(u, eye)),
         vec4(v, -dot(v, eye)),
@@ -524,11 +560,11 @@ export function ortho(left, right, bottom, top, near, far) {
     if (bottom == top) { throw "ortho(): bottom and top are equal"; }
     if (near == far) { throw "ortho(): near and far are equal"; }
 
-    var w = right - left;
-    var h = top - bottom;
-    var d = far - near;
+    let w = right - left;
+    let h = top - bottom;
+    let d = far - near;
 
-    var result = mat4();
+    let result = mat4();
     result[0][0] = 2.0 / w;
     result[1][1] = 2.0 / h;
     result[2][2] = -2.0 / d;
@@ -542,10 +578,10 @@ export function ortho(left, right, bottom, top, near, far) {
 //----------------------------------------------------------------------------
 
 export function perspective(fovy, aspect, near, far) {
-    var f = 1.0 / Math.tan(radians(fovy) / 2);
-    var d = far - near;
+    let f = 1.0 / Math.tan(radians(fovy) / 2);
+    let d = far - near;
 
-    var result = mat4();
+    let result = mat4();
     result[0][0] = f / aspect;
     result[1][1] = f;
     result[2][2] = -(near + far) / d;
@@ -566,10 +602,10 @@ export function transpose(m) {
         return "transpose(): trying to transpose a non-matrix";
     }
 
-    var result = [] as Matrix;
-    for (var i = 0; i < m.length; ++i) {
+    let result = [] as Matrix;
+    for (let i = 0; i < m.length; ++i) {
         result.push([]);
-        for (var j = 0; j < m[i].length; ++j) {
+        for (let j = 0; j < m[i].length; ++j) {
             result[i].push(m[j][i]);
         }
     }
@@ -584,24 +620,42 @@ export function transpose(m) {
 //  Vector Functions
 //
 
-export function dot(u, v) {
+export function dot(u: Array<number>, v: Array<number>) {
     if (u.length != v.length) {
         throw "dot(): vectors are not the same dimension";
     }
 
-    var sum = 0.0;
-    for (var i = 0; i < u.length; ++i) {
+    let sum = 0.0;
+    for (let i = 0; i < u.length; ++i) {
         sum += u[i] * v[i];
     }
 
     return sum;
 }
 
+export function lerp(u: number, v: number, t: number): number
+export function lerp(u: Vector2D, v: Vector2D, t: number): Vector2D
+export function lerp(u: Vector3D, v: Vector3D, t: number): Vector3D
+export function lerp(u: Vector4D, v: Vector4D, t: number): Vector4D
+export function lerp(u, v, t: number) {
+    if (typeof u === "number" && typeof v == "number") {
+        return u + (v - u) * t;
+    } else if (Array.isArray(u) && Array.isArray(v) && u.length == v.length) {
+        return u.map((_, i) => u[i] + (v[i] - u[i]) * t);
+    } else {
+        throw "lerp(): invalid argument";
+    }
+}
+
+export function includedAngle(u: Array<number>, v: Array<number>) {
+    return Math.acos(dot(u, v) / (length(u) * length(v)));
+}
+
 //----------------------------------------------------------------------------
 
-export function negate(u) {
-    var result = [];
-    for (var i = 0; i < u.length; ++i) {
+export function negate<T extends Array<number>>(u: T): T {
+    let result = [] as T;
+    for (let i = 0; i < u.length; ++i) {
         result.push(-u[i]);
     }
 
@@ -620,7 +674,7 @@ export function cross(u, v) {
         throw "cross(): second argument is not a vector of at least 3";
     }
 
-    var result = [
+    let result = [
         u[1] * v[2] - u[2] * v[1],
         u[2] * v[0] - u[0] * v[2],
         u[0] * v[1] - u[1] * v[0]
@@ -646,13 +700,13 @@ export function normalize(u, excludeLastComponent?) {
         var last = u.pop();
     }
 
-    var len = length(u);
+    let len = length(u);
 
     if (!isFinite(len)) {
         throw "normalize: vector " + u + " has zero length";
     }
 
-    for (var i = 0; i < u.length; ++i) {
+    for (let i = 0; i < u.length; ++i) {
         u[i] /= len;
     }
 
@@ -674,8 +728,8 @@ export function mix(u, v, s) {
         throw "vector dimension mismatch";
     }
 
-    var result = [];
-    for (var i = 0; i < u.length; ++i) {
+    let result = [];
+    for (let i = 0; i < u.length; ++i) {
         result.push((1.0 - s) * u[i] + s * v[i]);
     }
 
@@ -687,13 +741,13 @@ export function mix(u, v, s) {
 // Vector and Matrix functions
 //
 
-export function scale(s, u) {
+export function scale(s: number, u: Array<number>) {
     if (!Array.isArray(u)) {
         throw "scale: second parameter " + u + " is not a vector";
     }
 
-    var result = [];
-    for (var i = 0; i < u.length; ++i) {
+    let result = [];
+    for (let i = 0; i < u.length; ++i) {
         result.push(s * u[i]);
     }
 
@@ -710,26 +764,26 @@ export function flatten(v) {
         v = transpose(v);
     }
 
-    var n = v.length;
-    var elemsAreArrays = false;
+    let n = v.length;
+    let elemsAreArrays = false;
 
     if (Array.isArray(v[0])) {
         elemsAreArrays = true;
         n *= v[0].length;
     }
 
-    var floats = new Float32Array(n);
+    let floats = new Float32Array(n);
 
     if (elemsAreArrays) {
-        var idx = 0;
-        for (var i = 0; i < v.length; ++i) {
-            for (var j = 0; j < v[i].length; ++j) {
+        let idx = 0;
+        for (let i = 0; i < v.length; ++i) {
+            for (let j = 0; j < v[i].length; ++j) {
                 floats[idx++] = v[i][j];
             }
         }
     }
     else {
-        for (var i = 0; i < v.length; ++i) {
+        for (let i = 0; i < v.length; ++i) {
             floats[i] = v[i];
         }
     }
@@ -739,7 +793,7 @@ export function flatten(v) {
 
 //----------------------------------------------------------------------------
 
-var sizeof = {
+export let sizeof = {
     'vec2': new Float32Array(flatten(vec2())).byteLength,
     'vec3': new Float32Array(flatten(vec3())).byteLength,
     'vec4': new Float32Array(flatten(vec4())).byteLength,
@@ -752,13 +806,13 @@ var sizeof = {
 
 export function printm(m) {
     if (m.length == 2)
-        for (var i = 0; i < m.length; i++)
+        for (let i = 0; i < m.length; i++)
             console.log(m[i][0], m[i][1]);
     else if (m.length == 3)
-        for (var i = 0; i < m.length; i++)
+        for (let i = 0; i < m.length; i++)
             console.log(m[i][0], m[i][1], m[i][2]);
     else if (m.length == 4)
-        for (var i = 0; i < m.length; i++)
+        for (let i = 0; i < m.length; i++)
             console.log(m[i][0], m[i][1], m[i][2], m[i][3]);
 }
 // determinants
@@ -770,7 +824,7 @@ export function det2(m) {
 }
 
 export function det3(m) {
-    var d = m[0][0] * m[1][1] * m[2][2]
+    let d = m[0][0] * m[1][1] * m[2][2]
         + m[0][1] * m[1][2] * m[2][0]
         + m[0][2] * m[2][1] * m[1][0]
         - m[2][0] * m[1][1] * m[0][2]
@@ -781,22 +835,22 @@ export function det3(m) {
 }
 
 export function det4(m) {
-    var m0 = [
+    let m0 = [
         vec3(m[1][1], m[1][2], m[1][3]),
         vec3(m[2][1], m[2][2], m[2][3]),
         vec3(m[3][1], m[3][2], m[3][3])
     ];
-    var m1 = [
+    let m1 = [
         vec3(m[1][0], m[1][2], m[1][3]),
         vec3(m[2][0], m[2][2], m[2][3]),
         vec3(m[3][0], m[3][2], m[3][3])
     ];
-    var m2 = [
+    let m2 = [
         vec3(m[1][0], m[1][1], m[1][3]),
         vec3(m[2][0], m[2][1], m[2][3]),
         vec3(m[3][0], m[3][1], m[3][3])
     ];
-    var m3 = [
+    let m3 = [
         vec3(m[1][0], m[1][1], m[1][2]),
         vec3(m[2][0], m[2][1], m[2][2]),
         vec3(m[3][0], m[3][1], m[3][2])
@@ -818,8 +872,8 @@ export function det(m) {
 // inverses
 
 export function inverse2(m) {
-    var a = mat2();
-    var d = det2(m);
+    let a = mat2();
+    let d = det2(m);
     a[0][0] = m[1][1] / d;
     a[0][1] = -m[0][1] / d;
     a[1][0] = -m[1][0] / d;
@@ -829,42 +883,42 @@ export function inverse2(m) {
 }
 
 export function inverse3(m) {
-    var a = mat3();
-    var d = det3(m);
+    let a = mat3();
+    let d = det3(m);
 
-    var a00 = [
+    let a00 = [
         vec2(m[1][1], m[1][2]),
         vec2(m[2][1], m[2][2])
     ];
-    var a01 = [
+    let a01 = [
         vec2(m[1][0], m[1][2]),
         vec2(m[2][0], m[2][2])
     ];
-    var a02 = [
+    let a02 = [
         vec2(m[1][0], m[1][1]),
         vec2(m[2][0], m[2][1])
     ];
-    var a10 = [
+    let a10 = [
         vec2(m[0][1], m[0][2]),
         vec2(m[2][1], m[2][2])
     ];
-    var a11 = [
+    let a11 = [
         vec2(m[0][0], m[0][2]),
         vec2(m[2][0], m[2][2])
     ];
-    var a12 = [
+    let a12 = [
         vec2(m[0][0], m[0][1]),
         vec2(m[2][0], m[2][1])
     ];
-    var a20 = [
+    let a20 = [
         vec2(m[0][1], m[0][2]),
         vec2(m[1][1], m[1][2])
     ];
-    var a21 = [
+    let a21 = [
         vec2(m[0][0], m[0][2]),
         vec2(m[1][0], m[1][2])
     ];
-    var a22 = [
+    let a22 = [
         vec2(m[0][0], m[0][1]),
         vec2(m[1][0], m[1][1])
     ];
@@ -884,86 +938,86 @@ export function inverse3(m) {
 }
 
 export function inverse4(m) {
-    var a = mat4();
-    var d = det4(m);
+    let a = mat4();
+    let d = det4(m);
 
-    var a00 = [
+    let a00 = [
         vec3(m[1][1], m[1][2], m[1][3]),
         vec3(m[2][1], m[2][2], m[2][3]),
         vec3(m[3][1], m[3][2], m[3][3])
     ];
-    var a01 = [
+    let a01 = [
         vec3(m[1][0], m[1][2], m[1][3]),
         vec3(m[2][0], m[2][2], m[2][3]),
         vec3(m[3][0], m[3][2], m[3][3])
     ];
-    var a02 = [
+    let a02 = [
         vec3(m[1][0], m[1][1], m[1][3]),
         vec3(m[2][0], m[2][1], m[2][3]),
         vec3(m[3][0], m[3][1], m[3][3])
     ];
-    var a03 = [
+    let a03 = [
         vec3(m[1][0], m[1][1], m[1][2]),
         vec3(m[2][0], m[2][1], m[2][2]),
         vec3(m[3][0], m[3][1], m[3][2])
     ];
-    var a10 = [
+    let a10 = [
         vec3(m[0][1], m[0][2], m[0][3]),
         vec3(m[2][1], m[2][2], m[2][3]),
         vec3(m[3][1], m[3][2], m[3][3])
     ];
-    var a11 = [
+    let a11 = [
         vec3(m[0][0], m[0][2], m[0][3]),
         vec3(m[2][0], m[2][2], m[2][3]),
         vec3(m[3][0], m[3][2], m[3][3])
     ];
-    var a12 = [
+    let a12 = [
         vec3(m[0][0], m[0][1], m[0][3]),
         vec3(m[2][0], m[2][1], m[2][3]),
         vec3(m[3][0], m[3][1], m[3][3])
     ];
-    var a13 = [
+    let a13 = [
         vec3(m[0][0], m[0][1], m[0][2]),
         vec3(m[2][0], m[2][1], m[2][2]),
         vec3(m[3][0], m[3][1], m[3][2])
     ];
-    var a20 = [
+    let a20 = [
         vec3(m[0][1], m[0][2], m[0][3]),
         vec3(m[1][1], m[1][2], m[1][3]),
         vec3(m[3][1], m[3][2], m[3][3])
     ];
-    var a21 = [
+    let a21 = [
         vec3(m[0][0], m[0][2], m[0][3]),
         vec3(m[1][0], m[1][2], m[1][3]),
         vec3(m[3][0], m[3][2], m[3][3])
     ];
-    var a22 = [
+    let a22 = [
         vec3(m[0][0], m[0][1], m[0][3]),
         vec3(m[1][0], m[1][1], m[1][3]),
         vec3(m[3][0], m[3][1], m[3][3])
     ];
-    var a23 = [
+    let a23 = [
         vec3(m[0][0], m[0][1], m[0][2]),
         vec3(m[1][0], m[1][1], m[1][2]),
         vec3(m[3][0], m[3][1], m[3][2])
     ];
 
-    var a30 = [
+    let a30 = [
         vec3(m[0][1], m[0][2], m[0][3]),
         vec3(m[1][1], m[1][2], m[1][3]),
         vec3(m[2][1], m[2][2], m[2][3])
     ];
-    var a31 = [
+    let a31 = [
         vec3(m[0][0], m[0][2], m[0][3]),
         vec3(m[1][0], m[1][2], m[1][3]),
         vec3(m[2][0], m[2][2], m[2][3])
     ];
-    var a32 = [
+    let a32 = [
         vec3(m[0][0], m[0][1], m[0][3]),
         vec3(m[1][0], m[1][1], m[1][3]),
         vec3(m[2][0], m[2][1], m[2][3])
     ];
-    var a33 = [
+    let a33 = [
         vec3(m[0][0], m[0][1], m[0][2]),
         vec3(m[1][0], m[1][1], m[1][2]),
         vec3(m[2][0], m[2][1], m[2][2])
@@ -998,13 +1052,24 @@ export function inverse(m) {
 }
 
 export function normalMatrix(m, flag) {
-    var a = mat4();
+    let a = mat4();
     a = inverse(transpose(m));
     if (flag != true) return a;
     else {
-        var b = mat3();
-        for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) b[i][j] = a[i][j];
+        let b = mat3();
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) b[i][j] = a[i][j];
         return b;
     }
 
+}
+
+export function coordSysTransform(newSysBase: Vector3D, newSysAxis: [Vector3D, Vector3D, Vector3D]) {
+    const b = newSysBase;
+    const [u, v, n] = newSysAxis;
+    return mat4(
+        ...u, -dot(b, u),
+        ...v, -dot(b, v),
+        ...n, -dot(b, n),
+        0, 0, 0, 1
+    );
 }

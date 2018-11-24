@@ -33,79 +33,6 @@ let lastPos = [0, 0, 0];
 let curx, cury;
 let startX, startY;
 
-let c = new Canvas("canvas");
-
-let render = () => c.render((cv: Canvas) => {
-    let uniforms;
-    try {
-        uniforms = cv.objectsToDraw[nowPtr].uniforms;
-    } catch (e) {
-        console.log(e);
-    }
-    let ctr = ctrl[nowPtr];
-    let S = MV.scalem(ctr.scale, ctr.scale, ctr.scale);
-    let R = MV.rotateY(ctr.rotateAngle);
-    let T = MV.translate(ctr.offsetX, ctr.offsetY, 0);
-    uniforms.u_MVMatrix = MV.flatten(MV.mult(MV.mult(S, R), T));
-    uniforms.u_Color = [1, 0.5, 0, 1];
-
-    rMatrix = MV.mult(rMatrix, MV.rotate(rAngle, rAxis));
-    for (let { uniforms } of cv.objectsToDraw) {
-        uniforms.u_RMatrix = MV.flatten(rMatrix);
-    }
-}, true);
-
-async function main() {
-    let raw = JSON.parse(await (await fetch("aqua-fish.json")).text());
-    let aqua_fish = raw.models[0].fields as { [key: string]: WebGLAttribute };
-    delete aqua_fish.binormal;
-    delete aqua_fish.texCoord;
-    delete aqua_fish.tangent;
-
-    c.newObject(
-        await c.sourceByFile("fish.glslv", "fish.glslf"),
-        c.gl.TRIANGLES,
-        aqua_fish, {
-            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
-            u_RMatrix: MV.flatten(MV.mat4()),
-            u_Color: [1, 0.5, 0, 1]
-        }
-    );
-
-    let kun = JSON.parse(await (await fetch("kun.json")).text());
-
-    c.newObject(
-        await c.sourceByFile("fish.glslv", "fish.glslf"),
-        c.gl.LINES,
-        kun, {
-            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
-            u_RMatrix:  MV.flatten(MV.mat4()),
-            u_Color: [1, 0.5, 0, 1]
-        }
-    );
-
-    c.canvas.addEventListener("mousedown", function (event) {
-        var x = 2 * event.clientX / c.canvas.width - 1;
-        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
-        startMotion(x, y);
-    });
-
-    c.canvas.addEventListener("mouseup", function (event) {
-        var x = 2 * event.clientX / c.canvas.width - 1;
-        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
-        stopMotion(x, y);
-    });
-
-    c.canvas.addEventListener("mousemove", function (event) {
-        var x = 2 * event.clientX / c.canvas.width - 1;
-        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
-        mouseMotion(x, y);
-        render();
-    });
-
-    render();
-}
-
 // 键盘交互
 
 document.onkeydown = function (event) {
@@ -177,7 +104,7 @@ function mouseMotion(x, y) {
         dz = curPos[2] - lastPos[2];
 
         if (dx || dy || dz) {
-            rAngle = -0.1 * Math.sqrt(dx * dx + dy * dy + dz * dz);
+            rAngle = -5 * Math.sqrt(dx * dx + dy * dy + dz * dz);
 
 
             rAxis[0] = lastPos[1] * curPos[2] - lastPos[2] * curPos[1];
@@ -210,6 +137,78 @@ function stopMotion(x, y) {
         rAngle = 0.0;
         trackballMove = false;
     }
+}
+
+let c = new Canvas("canvas");
+
+async function main() {
+    let raw = JSON.parse(await (await fetch("aqua-fish.json")).text());
+    let aqua_fish = raw.models[0].fields as { [key: string]: WebGLAttribute };
+    delete aqua_fish.binormal;
+    delete aqua_fish.texCoord;
+    delete aqua_fish.tangent;
+
+    c.newObject(
+        await c.sourceByFile("fish.glslv", "fish.glslf"),
+        c.gl.TRIANGLES,
+        aqua_fish, {
+            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
+            u_RMatrix: MV.flatten(MV.mat4()),
+            u_Color: [1, 0.5, 0, 1]
+        }
+    );
+
+    let kun = JSON.parse(await (await fetch("kun.json")).text());
+
+    c.newObject(
+        await c.sourceByFile("fish.glslv", "fish.glslf"),
+        c.gl.LINES,
+        kun, {
+            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
+            u_RMatrix:  MV.flatten(MV.mat4()),
+            u_Color: [1, 0.5, 0, 1]
+        }
+    );
+
+    c.canvas.addEventListener("mousedown", function (event) {
+        var x = 2 * event.clientX / c.canvas.width - 1;
+        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
+        startMotion(x, y);
+    });
+
+    c.canvas.addEventListener("mouseup", function (event) {
+        var x = 2 * event.clientX / c.canvas.width - 1;
+        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
+        stopMotion(x, y);
+    });
+
+    c.canvas.addEventListener("mousemove", function (event) {
+        var x = 2 * event.clientX / c.canvas.width - 1;
+        var y = 2 * (c.canvas.height - event.clientY) / c.canvas.height - 1;
+        mouseMotion(x, y);
+    });
+
+    c.updatePipeline.push((cv: Canvas) => {
+        let uniforms;
+        try {
+            uniforms = cv.objectsToDraw[nowPtr].uniforms;
+        } catch (e) {
+            console.log(e);
+        }
+        let ctr = ctrl[nowPtr];
+        let S = MV.scalem(ctr.scale, ctr.scale, ctr.scale);
+        let R = MV.rotateY(ctr.rotateAngle);
+        let T = MV.translate(ctr.offsetX, ctr.offsetY, 0);
+        uniforms.u_MVMatrix = MV.flatten(MV.mult(S, R, T));
+        uniforms.u_Color = [1, 0.5, 0, 1];
+    
+        rMatrix = MV.mult(rMatrix, MV.rotate(rAngle, rAxis));
+        for (let { uniforms } of cv.objectsToDraw) {
+            uniforms.u_RMatrix = MV.flatten(rMatrix);
+        }
+    });
+
+    c.render(true);
 }
 
 main();
