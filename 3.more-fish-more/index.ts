@@ -28,6 +28,37 @@ async function main() {
     );
 
     c.bindShadow(fish_kun_obj, [2, 5, 0], source);
+    
+    // 初始，鱼头指向x轴负方向，令其顺时针旋转90度
+    
+    let baseMVMatrix = MV.rotateZ(-Math.PI / 2);
+    let direction = [0, 1, 0] as MV.Vector3D;
+    let normal = [1, 0, 0] as MV.Vector3D;
+
+    // 画心形线
+    c.updatePipeline.push((cv, time, deltaTime) => {
+        const theta = time * Math.PI;
+        const rho = 2 * (1 + Math.sin(theta)); // a = 10
+        const x = rho * Math.cos(theta);
+        const y = rho * Math.sin(theta);
+        const d = Math.sqrt(x * x + y * y);
+        const dx = (x - 2*x*d);
+        const dy = (2*y*d - d - y);
+        const newDir = MV.normalize([dx, dy, 0]);
+        const deltaTheta = MV.includedAngle(newDir, fish_aqua_obj.direction);
+        const tMatrix = MV.translate(...fish_kun_obj.center);
+        const cstMatrix = MV.coordSysTransform(fish_kun_obj.center, fish_kun_obj.coordSystem);
+        fish_aqua_obj.setModelView(MV.mult(
+            // MV.inverse4(tMatrix),
+            MV.inverse4(cstMatrix),
+            MV.translate(x, y, 0),
+            MV.rotateZ(deltaTheta),
+            cstMatrix,
+            tMatrix,
+            MV.scalem(0.2, 0.2, 0.2),
+            MV.rotateX(-Math.PI / 2),
+        ));
+    });
 
     c.bindController(fish_kun_obj, { scale: 0.2 }); 
     c.bindController(fish_aqua_obj, { scale: 0.1, offset: [0, -1, 0] });
