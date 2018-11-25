@@ -36,5 +36,13 @@
             "sourceMaps": true,
             "url": "http://localhost:8080/2.i-is-fish"
         },
+        {
+            "name": "3.more-fish-more",
+            "type": "chrome",
+            "request": "launch",
+            "webRoot": "${workspaceRoot}/dist",
+            "sourceMaps": true,
+            "url": "http://localhost:8080/3.more-fish-more"
+        },
     ]
 }
