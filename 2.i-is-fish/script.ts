@@ -7,6 +7,7 @@ interface Controller {
     offsetX?: number;
     offsetY?: number;
     scale?: number;
+    offsetZ?: number;
 }
 
 let nowPtr: number = 0;
@@ -15,11 +16,13 @@ let ctrl: [Controller, Controller] = [{
     offsetX: 0,
     offsetY: 0,
     scale: 0.2,
+    offsetZ: 0
 }, {
     rotateAngle: 0,
     offsetX: 0,
     offsetY: 0,
     scale: 0.2,
+    offsetZ: 0
 }];
 
 let rAngle = 0;
@@ -30,7 +33,7 @@ let trackingMouse = false;
 let trackballMove = false;
 
 let lastPos = [0, 0, 0];
-let curx, cury;
+
 let startX, startY;
 
 // 键盘交互
@@ -46,6 +49,7 @@ document.onkeydown = function (event) {
     // ↑ 38 ↓ 40 ← 37 →39
     // z 90 c 67
     // w 87 s 83
+    // q 81 e 101
     if (e && e.keyCode == 38) {
         ctrl[nowPtr].offsetY += 0.05;
     }
@@ -70,6 +74,12 @@ document.onkeydown = function (event) {
     if (e && e.keyCode == 83) { //s 缩小
         ctrl[nowPtr].scale -= 0.005;
         if (ctrl[nowPtr].scale < 0) ctrl[nowPtr].scale = 1;
+    }
+    if (e && e.keyCode == 81){
+        ctrl[nowPtr].offsetZ += 0.05;
+    }
+    if(e && e.keyCode == 69){
+        ctrl[nowPtr].offsetZ -= 0.05;
     }
 }
 
@@ -122,9 +132,6 @@ function startMotion(x, y) {
     trackingMouse = true;
     startX = x;
     startY = y;
-    curx = x;
-    cury = y;
-
     lastPos = trackballView(x, y);
     trackballMove = true;
 }
