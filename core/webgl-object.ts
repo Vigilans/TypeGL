@@ -48,7 +48,7 @@ export class WebGLRenderingObject {
 // 带朝向与法线的 WebGL 渲染对象，朝向与法线均保持初始状态。
 export class WebGLOrientedObject extends WebGLRenderingObject {
     
-    public constructor(
+    constructor(
         gl: WebGLRenderingContext,
         public initDir: MV.Vector3D,
         public initNorm: MV.Vector3D
@@ -60,17 +60,33 @@ export class WebGLOrientedObject extends WebGLRenderingObject {
     }
 
     // 朝向 × 法线形成的第三条轴
-    public initSideAxis: MV.Vector3D;
+    initSideAxis: MV.Vector3D;  
 
-    public direction: MV.Vector3D;
+    direction: MV.Vector3D;
 
-    public normal: MV.Vector3D;
+    normal: MV.Vector3D;
 
-    public get sideAxis() {  // 朝向 × 法线形成的第三条轴
+    get sideAxis() {  // 朝向 × 法线形成的第三条轴
         return MV.normalize(MV.cross(this.normal, this.direction));
     }
 
-    public get coordSystem(): [MV.Vector3D, MV.Vector3D, MV.Vector3D] {
+    get coordSystem(): [MV.Vector3D, MV.Vector3D, MV.Vector3D] {
         return [this.normal, this.direction, this.sideAxis];
+    }
+
+    // 直接设置MV矩阵
+    setModelView(m: MV.Matrix) {
+        super.setModelView(m);
+        this.direction = MV.normalize(MV.subtract(MV.transformPoint(m, this.initDir), this.center));
+        this.normal = MV.normalize(MV.subtract(MV.transformPoint(m, this.initNorm), this.center));
+    }
+
+    // 对MV矩阵实施变换
+    transform(m: MV.Matrix) {
+        const abs_dir = MV.add(this.direction, this.center);
+        const abs_norm = MV.add(this.normal, this.center);
+        super.transform(m);
+        this.direction = MV.normalize(MV.subtract(MV.transformPoint(m, abs_dir), this.center));
+        this.normal = MV.normalize(MV.subtract(MV.transformPoint(m, abs_norm), this.center));
     }
 }
