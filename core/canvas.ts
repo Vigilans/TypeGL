@@ -1,4 +1,5 @@
-import { WebGLRenderingObject, WebGLAttributeMap, WebGLUniformMap } from "./webgl-extension.js";
+import { WebGLAttributeMap, WebGLUniformMap } from "./webgl-extension.js";
+import { WebGLRenderingObject, WebGLOrientedObject } from "./webgl-object.js";
 import { MatrixStack } from "./matrix-stack.js";
 import * as MV from "./MV.js";
 
@@ -142,36 +143,6 @@ export class Canvas {
             "fill": this.gl.TRIANGLE_FAN,
             "stroke": this.gl.LINE_STRIP
         })[mode];
-    }
-}
-
-// 带朝向与法线的 WebGL 渲染对象，朝向与法线均保持初始状态。
-export class WebGLOrientedObject extends WebGLRenderingObject {
-    
-    public constructor(
-        gl: WebGLRenderingContext,
-        public initDir: MV.Vector3D,
-        public initNorm: MV.Vector3D
-    ) { 
-        super(gl);
-        this.direction = initDir;
-        this.normal = initNorm;
-        this.initSideAxis = MV.normalize(MV.cross(initNorm, initDir));
-    }
-
-    // 朝向 × 法线形成的第三条轴
-    public initSideAxis: MV.Vector3D;
-
-    public direction: MV.Vector3D;
-
-    public normal: MV.Vector3D;
-
-    public get sideAxis() {  // 朝向 × 法线形成的第三条轴
-        return MV.normalize(MV.cross(this.normal, this.direction));
-    }
-
-    public get coordSystem(): [MV.Vector3D, MV.Vector3D, MV.Vector3D] {
-        return [this.normal, this.direction, this.sideAxis];
     }
 }
 

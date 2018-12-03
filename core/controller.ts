@@ -1,5 +1,6 @@
 import * as MV from "./MV.js";
-import { Canvas, WebGLOrientedObject } from "./canvas.js";
+import { Canvas } from "./canvas.js";
+import { WebGLOrientedObject } from "./webgl-object.js";
 
 export class Controller {
 

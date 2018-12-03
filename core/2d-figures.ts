@@ -1,8 +1,9 @@
 import { Canvas } from "./canvas.js"
-import { WebGLRenderingObject, WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
+import { WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
+import { WebGLRenderingObject } from "./webgl-object.js"
 import * as MV from "./MV.js";
 
-export function getVertsOnCircle(center: MV.Vector2D, radius: number, mode: "fill" | "stroke", numCircleVerts = 10): Array<MV.Vector2D> {
+export function createCircleVertices(center: MV.Vector2D, radius: number, mode: "fill" | "stroke", numCircleVerts = 10): Array<MV.Vector2D> {
     return [
         ...mode == "fill" ? [center] : [],
         ...Array.range(0, numCircleVerts + 1).map(i => {
@@ -12,7 +13,7 @@ export function getVertsOnCircle(center: MV.Vector2D, radius: number, mode: "fil
     ];
 }
 
-export function getVertsOnBezierCurve(points: Array<MV.Vector2D>, numVertexes = 50): Array<MV.Vector2D> {
+export function createBezierCurveVertices(points: Array<MV.Vector2D>, numVertexes = 50): Array<MV.Vector2D> {
     let verts = [] as Array<MV.Vector2D>;
     for (let segStart = 0; segStart + 3 < points.length; segStart += 3) {
         verts.push(...Array.range(0, numVertexes + 1).map(i => {
@@ -32,7 +33,7 @@ export function getVertsOnBezierCurve(points: Array<MV.Vector2D>, numVertexes = 
 declare module "./canvas.js" {
     interface Canvas {
         setLineThickness(thickness: number): void;
-        drawFigure(color: string | number[], mode: "fill" | "stroke", attributes?: { [key: string]: WebGLAttribute }, uniforms?: { [key: string]: WebGLUniformType }): WebGLRenderingObject;
+        drawFigure2D(color: string | number[], mode: "fill" | "stroke", attributes?: { [key: string]: WebGLAttribute }, uniforms?: { [key: string]: WebGLUniformType }): WebGLRenderingObject;
         drawTriangle(points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke"): WebGLRenderingObject;
         drawCircle(center: [number, number], radius: number, color: string | number[], mode: "fill" | "stroke"): WebGLRenderingObject;
         drawBezierCurve(points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke"): WebGLRenderingObject;
@@ -41,7 +42,7 @@ declare module "./canvas.js" {
 
 Object.assign(Canvas.prototype, {
 
-    drawFigure(
+    drawFigure2D(
         this: Canvas, 
         color: string | number[],
         mode: "fill" | "stroke",
@@ -101,29 +102,29 @@ Object.assign(Canvas.prototype, {
                 data: [].concat(...points.map(v => this.normVec2D(v)))
             }
         };
-        return this.drawFigure(color, mode, attributes);
+        return this.drawFigure2D(color, mode, attributes);
     },
 
     drawCircle(this: Canvas, center: MV.Vector2D, radius: number, color: string | number[], mode: "fill" | "stroke") {
-        let verts = getVertsOnCircle(center, radius, mode);
+        let verts = createCircleVertices(center, radius, mode);
         let attributes = {
             a_Position: {
                 numComponents: 2,
                 data: [].concat(...verts.map(v => this.normVec2D(v)))
             }
         };
-        return this.drawFigure(color, mode, attributes);
+        return this.drawFigure2D(color, mode, attributes);
     },
 
     drawBezierCurve(this: Canvas, points: Array<MV.Vector2D>, color: string | number[], mode: "fill" | "stroke") {
-        let verts = getVertsOnBezierCurve(points);
+        let verts = createBezierCurveVertices(points);
         let attributes = {
             a_Position: {
                 numComponents: 2,
                 data:  [].concat(...verts.map(v => this.normVec2D(v)))
             }
         };
-        return this.drawFigure(color, mode, attributes);
+        return this.drawFigure2D(color, mode, attributes);
     },
 
     setLineThickness(this: Canvas, thickness: number) {

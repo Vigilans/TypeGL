@@ -1,6 +1,6 @@
 import { Canvas } from "./canvas.js"
 import * as MV from "./MV.js"
-import { WebGLRenderingObject } from "./webgl-extension.js";
+import { WebGLRenderingObject } from "./webgl-object.js";
 
 // 将 (x, y) 由 [-1, 1] × [-1, 1] 平面映射至单位半球面
 export function trackballView(x: number, y: number) {
