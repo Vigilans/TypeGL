@@ -44,5 +44,13 @@
             "sourceMaps": true,
             "url": "http://localhost:8080/3.more-fish-more"
         },
+        {
+            "name": "4.beauty-of-fish",
+            "type": "chrome",
+            "request": "launch",
+            "webRoot": "${workspaceRoot}/dist",
+            "sourceMaps": true,
+            "url": "http://localhost:8080/4.beauty-of-fish"
+        },
     ]
 }
