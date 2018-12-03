@@ -183,7 +183,7 @@ export function mat2vec(mat: Matrix): Array<number> {
 //     return mat2vec(mult(mat, vec2mat(point))) as Vector3D;
 // }
 
-export function transformPoint(mat, vec, dst?) {
+export function transformPoint(mat: Matrix, vec: Vector3D, dst?: Vector3D) {
     dst = dst || vec3();
     const v0 = vec[0];
     const v1 = vec[1];
@@ -234,17 +234,14 @@ export function equal(u: Tensor, v: Tensor) {
 
 //----------------------------------------------------------------------------
 
-function add_impl(u: Matrix, v: Matrix): Matrix;
-function add_impl(u: Array<number>, v: Array<number>): Array<number>;
-function add_impl(u: number, v: number): number;
-function add_impl(u, v) {
+function add_impl<T extends Tensor>(u: T, v: T): T {
     if (isMatrix(u) && isMatrix(v)) {
 
         if (u.length != v.length) {
             throw "add(): trying to add matrices of different dimensions";
         }
 
-        let result = [] as Matrix;
+        let result = [] as T & Matrix;
 
         for (let i = 0; i < u.length; ++i) {
             if (u[i].length != v[i].length) {
@@ -265,7 +262,7 @@ function add_impl(u, v) {
             throw "add(): vectors are not the same dimension";
         }
 
-        let result = [] as Array<number>;
+        let result = [] as T & Array<number>;
 
         for (let i = 0; i < u.length; ++i) {
             result.push(u[i] + v[i]);
@@ -274,7 +271,7 @@ function add_impl(u, v) {
         return result;
     }
     else if (isScalar(u) && isScalar(v)) {
-        return u + v;
+        return u + v as T & number;
     }
     else {
         throw "add(): trying to add letiables of different type";
@@ -283,17 +280,14 @@ function add_impl(u, v) {
 
 //----------------------------------------------------------------------------
 
-function subtract_impl(u: Matrix, v: Matrix): Matrix;
-function subtract_impl(u: Array<number>, v: Array<number>): Array<number>;
-function subtract_impl(u: number, v: number): number;
-function subtract_impl(u, v) {
+function subtract_impl<T extends Tensor>(u: T, v: T): T {
     if (isMatrix(u) && isMatrix(v)) {
         if (u.length != v.length) {
             throw "subtract(): trying to subtract matrices" +
             " of different dimensions";
         }
 
-        let result = [] as Matrix;
+        let result = [] as T & Matrix;
 
         for (let i = 0; i < u.length; ++i) {
             if (u[i].length != v[i].length) {
@@ -315,7 +309,7 @@ function subtract_impl(u, v) {
             throw "subtract(): vectors are not the same length";
         }
 
-        let result = [] as Array<number>;
+        let result = [] as T & Array<number>;
 
         for (let i = 0; i < u.length; ++i) {
             result.push(u[i] - v[i]);
@@ -324,7 +318,7 @@ function subtract_impl(u, v) {
         return result;
     }
     else if (isScalar(u) && isScalar(v)) {
-        return u - v;
+        return (u - v) as T & number;
     }
     else {
         throw "subtact(): trying to subtact letiables of different type";
@@ -333,13 +327,10 @@ function subtract_impl(u, v) {
 
 //----------------------------------------------------------------------------
 
-function mult_impl(u: Matrix, v: Matrix): Matrix;
-function mult_impl(u: Array<number>, v: Array<number>): Array<number>;
-function mult_impl(u: number, v: number): number;
-function mult_impl(u, v) {
+function mult_impl<T extends Tensor>(u: T, v: T): T {
     if (isMatrix(u) && isMatrix(v)) {
 
-        let result = [] as Matrix;
+        let result = [] as T & Matrix;
 
         for (let i = 0; i < u.length; ++i) {
             result.push([]);
@@ -365,7 +356,7 @@ function mult_impl(u, v) {
             throw "mult(): vectors are not the same dimension";
         }
 
-        let result = [] as Array<number>;
+        let result = [] as T & Array<number>;
 
         for (let i = 0; i < u.length; ++i) {
             result.push(u[i] * v[i]);
@@ -374,17 +365,14 @@ function mult_impl(u, v) {
         return result;
     }
     else if (isScalar(u) && isScalar(v)) {
-        return u * v;
+        return (u * v) as T & number;
     }
     else {
         throw "mult(): trying to mult letiables of different type"
     }
 }
 
-export function add(...vals: number[]): number;
-export function add(...vals: Array<number>[]): Array<number>;
-export function add(...vals: Matrix[]): Matrix;
-export function add(...vals) {
+export function add<T extends Tensor>(...vals: T[]): T {
     switch (vals.length) {
         case 0: return undefined;
         case 1: return vals[0];
@@ -393,10 +381,7 @@ export function add(...vals) {
     }
 }
 
-export function subtract(...vals: number[]): number;
-export function subtract(...vals: Array<number>[]): Array<number>;
-export function subtract(...vals: Matrix[]): Matrix;
-export function subtract(...vals) {
+export function subtract<T extends Tensor>(...vals: T[]): T {
     switch (vals.length) {
         case 0: return undefined;
         case 1: return vals[0];
@@ -405,10 +390,7 @@ export function subtract(...vals) {
     }
 }
 
-export function mult(...vals: number[]): number;
-export function mult(...vals: Array<number>[]): Array<number>;
-export function mult(...vals: Matrix[]): Matrix;
-export function mult(...vals) {
+export function mult<T extends Tensor>(...vals: T[]): T {
     switch (vals.length) {
         case 0: return undefined;
         case 1: return vals[0];
@@ -741,12 +723,12 @@ export function mix(u, v, s) {
 // Vector and Matrix functions
 //
 
-export function scale(s: number, u: Array<number>) {
+export function scale<T extends Vector>(s: number, u: T): T {
     if (!Array.isArray(u)) {
         throw "scale: second parameter " + u + " is not a vector";
     }
 
-    let result = [];
+    let result = [] as T;
     for (let i = 0; i < u.length; ++i) {
         result.push(s * u[i]);
     }
