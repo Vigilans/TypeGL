@@ -404,7 +404,7 @@ export function mult<T extends Tensor>(...vals: T[]): T {
 //  Basic Transformation Matrix Generators
 //
 
-export function translate(x, y, z) {
+export function translate(x: number, y: number, z: number) {
     if (Array.isArray(x) && x.length == 3) {
         z = x[2];
         y = x[1];
@@ -421,7 +421,7 @@ export function translate(x, y, z) {
 
 //----------------------------------------------------------------------------
 
-export function rotate(angle, axis) {
+export function rotate(angle: number, axis: Vector3D) {
     if (!Array.isArray(axis)) {
         axis = [arguments[1], arguments[2], arguments[3]];
     }
@@ -446,7 +446,7 @@ export function rotate(angle, axis) {
     return result;
 }
 
-export function rotateX(theta) {
+export function rotateX(theta: number) {
     let c = Math.cos(theta);
     let s = Math.sin(theta);
     let rx = mat4(1.0, 0.0, 0.0, 0.0,
@@ -456,7 +456,7 @@ export function rotateX(theta) {
     return rx;
 }
 
-export function rotateY(theta) {
+export function rotateY(theta: number) {
     let c = Math.cos(theta);
     let s = Math.sin(theta);
     let ry = mat4(c, 0.0, -s, 0.0,
@@ -466,7 +466,7 @@ export function rotateY(theta) {
     return ry;
 }
 
-export function rotateZ(theta) {
+export function rotateZ(theta: number) {
     let c = Math.cos(theta);
     let s = Math.sin(theta);
     let rz = mat4(c, s, 0.0, 0.0,
@@ -479,7 +479,7 @@ export function rotateZ(theta) {
 
 //----------------------------------------------------------------------------
 
-export function scalem(x, y, z) {
+export function scalem(x: number, y: number, z: number) {
     if (Array.isArray(x) && x.length == 3) {
         z = x[2];
         y = x[1];
@@ -537,7 +537,7 @@ export function lookAt(eye: Vector3D, at: Vector3D, up: Vector3D = [0, 1, 0]) {
 //  Projection Matrix Generators
 //
 
-export function ortho(left, right, bottom, top, near, far) {
+export function ortho(left: number, right: number, bottom: number, top: number, near: number, far: number) {
     if (left == right) { throw "ortho(): left and right are equal"; }
     if (bottom == top) { throw "ortho(): bottom and top are equal"; }
     if (near == far) { throw "ortho(): near and far are equal"; }
@@ -559,7 +559,7 @@ export function ortho(left, right, bottom, top, near, far) {
 
 //----------------------------------------------------------------------------
 
-export function perspective(fovy, aspect, near, far) {
+export function perspective(fovy: number, aspect: number, near: number, far: number) {
     let f = 1.0 / Math.tan(radians(fovy) / 2);
     let d = far - near;
 
@@ -579,7 +579,7 @@ export function perspective(fovy, aspect, near, far) {
 //  Matrix Functions
 //
 
-export function transpose(m) {
+export function transpose(m: Matrix) {
     if (!m.matrix) {
         return "transpose(): trying to transpose a non-matrix";
     }
@@ -602,7 +602,7 @@ export function transpose(m) {
 //  Vector Functions
 //
 
-export function dot(u: Array<number>, v: Array<number>) {
+export function dot(u: Vector, v: Vector) {
     if (u.length != v.length) {
         throw "dot(): vectors are not the same dimension";
     }
@@ -615,15 +615,15 @@ export function dot(u: Array<number>, v: Array<number>) {
     return sum;
 }
 
-export function lerp(u: number, v: number, t: number): number
-export function lerp(u: Vector2D, v: Vector2D, t: number): Vector2D
-export function lerp(u: Vector3D, v: Vector3D, t: number): Vector3D
-export function lerp(u: Vector4D, v: Vector4D, t: number): Vector4D
-export function lerp(u, v, t: number) {
+export function distance(u: Vector, v: Vector) {
+    return length(subtract(u, v));
+}
+
+export function lerp<T extends number | Vector>(u: T, v: T, t: number): T {
     if (typeof u === "number" && typeof v == "number") {
-        return u + (v - u) * t;
+        return (u + (v - u) * t) as T & number;
     } else if (Array.isArray(u) && Array.isArray(v) && u.length == v.length) {
-        return u.map((_, i) => u[i] + (v[i] - u[i]) * t);
+        return u.map((_, i) => u[i] + (v[i] - u[i]) * t) as T & Vector;
     } else {
         throw "lerp(): invalid argument";
     }
@@ -635,7 +635,7 @@ export function includedAngle(u: Array<number>, v: Array<number>) {
 
 //----------------------------------------------------------------------------
 
-export function negate<T extends Array<number>>(u: T): T {
+export function negate<T extends Vector>(u: T): T {
     let result = [] as T;
     for (let i = 0; i < u.length; ++i) {
         result.push(-u[i]);
@@ -646,8 +646,7 @@ export function negate<T extends Array<number>>(u: T): T {
 
 //----------------------------------------------------------------------------
 
-export function cross(u: Vector3D, v: Vector3D): Vector3D;
-export function cross(u, v) {
+export function cross(u: Vector3D, v: Vector3D) {
     if (!Array.isArray(u) || u.length < 3) {
         throw "cross(): first argument is not a vector of at least 3";
     }
@@ -667,17 +666,17 @@ export function cross(u, v) {
 
 //----------------------------------------------------------------------------
 
-export function l2_norm(u) {
+export function l2_norm(u: Vector): number {
     return dot(u, u);
 }
 
-export function length(u) {
+export function length(u: Vector): number {
     return Math.sqrt(l2_norm(u));
 }
 
 //----------------------------------------------------------------------------
 
-export function normalize(u, excludeLastComponent?) {
+export function normalize<T extends Vector>(u: T, excludeLastComponent = false): T {
     if (excludeLastComponent) {
         var last = u.pop();
     }
@@ -697,25 +696,6 @@ export function normalize(u, excludeLastComponent?) {
     }
 
     return u;
-}
-
-//----------------------------------------------------------------------------
-
-export function mix(u, v, s) {
-    if (typeof s !== "number") {
-        throw "mix: the last paramter " + s + " must be a number";
-    }
-
-    if (u.length != v.length) {
-        throw "vector dimension mismatch";
-    }
-
-    let result = [];
-    for (let i = 0; i < u.length; ++i) {
-        result.push((1.0 - s) * u[i] + s * v[i]);
-    }
-
-    return result;
 }
 
 //----------------------------------------------------------------------------
