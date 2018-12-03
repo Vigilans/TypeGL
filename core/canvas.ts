@@ -2,6 +2,7 @@ import { WebGLAttributeMap, WebGLUniformMap } from "./webgl-extension.js";
 import { WebGLRenderingObject, WebGLOrientedObject } from "./webgl-object.js";
 import { MatrixStack } from "./matrix-stack.js";
 import * as MV from "./MV.js";
+import "./webgl-extension.js";
 
 export class Canvas {
 
@@ -133,16 +134,17 @@ export class Canvas {
                 case rgbReg.test(strRgb):
                     return this.normRgb(rgbReg.exec(strRgb).slice(1).map(Number));
                 default:
-                    throw ("invalid rgb format");
+                    throw Error("invalid rgb format");
             }
         }
     }
 
     public fillOrStroke(mode: "fill" | "stroke"): number {
-        return ({
-            "fill": this.gl.TRIANGLE_FAN,
-            "stroke": this.gl.LINE_STRIP
-        })[mode];
+        switch (mode) {
+            case "fill": return this.gl.TRIANGLE_FAN;
+            case "stroke": return this.gl.LINE_STRIP;
+            default: throw Error(`Invalid mode: ${mode}`);
+        }
     }
 }
 

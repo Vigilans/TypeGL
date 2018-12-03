@@ -32,8 +32,8 @@ async function main() {
     canvas.gl.clear(canvas.gl.COLOR_BUFFER_BIT);
     canvas.gl.lineWidth(10);
     canvas.newObject(source, canvas.gl.TRIANGLE_STRIP, attributes);
-    // canvas.drawCircle([400, 300], 100, "#ff8bd2", "fill");
-    // canvas.drawBezierCurve([[326, 413], [593, 296], [660, 470], [463, 552]], "#e9565e", "stroke");
+    // canvas.drawCircle("#ff8bd2", [400, 300], 100, "fill");
+    // canvas.drawBezierCurve("#e9565e", [[326, 413], [593, 296], [660, 470], [463, 552]], "stroke");
     canvas.render();
 }
 

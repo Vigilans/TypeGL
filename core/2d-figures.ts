@@ -1,19 +1,21 @@
-import { Canvas } from "./canvas.js"
+import { Canvas } from "./canvas.js";
 import { WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
-import { WebGLRenderingObject } from "./webgl-object.js"
+import { WebGLRenderingObject } from "./webgl-object.js";
 import * as MV from "./MV.js";
 
-export function createCircleVertices(center: MV.Vector2D, radius: number, mode: "fill" | "stroke", numCircleVerts = 10): Array<MV.Vector2D> {
+export function createCircleVertices(center: MV.Vector2D, radius: number, mode: "fill" | "stroke") {
+    const numCircleVerts = 100;
     return [
         ...mode == "fill" ? [center] : [],
         ...Array.range(0, numCircleVerts + 1).map(i => {
             const rad = 2 * Math.PI * i / numCircleVerts;
             return Array.add(center, Array.mul(radius, [Math.cos(rad), Math.sin(rad)])) as MV.Vector2D;
         })
-    ];
+    ] as Array<MV.Vector2D>;
 }
 
-export function createBezierCurveVertices(points: Array<MV.Vector2D>, numVertexes = 50): Array<MV.Vector2D> {
+export function createBezierCurveVertices(points: Array<MV.Vector2D>, mode: "fill" | "stroke" = "stroke") {
+    const numVertexes = 50;
     let verts = [] as Array<MV.Vector2D>;
     for (let segStart = 0; segStart + 3 < points.length; segStart += 3) {
         verts.push(...Array.range(0, numVertexes + 1).map(i => {
@@ -30,13 +32,34 @@ export function createBezierCurveVertices(points: Array<MV.Vector2D>, numVertexe
     return verts;
 }
 
+// 组合函数
+export function bindDrawing2D<T extends any[]>(createVertices: (..._Args: T) => MV.Vector2D[]) {
+    return function (color: string | number[], ...args: T) {
+        const vertices = createVertices(...args);
+        const mode: "fill" | "stroke" = args.slice(-1)[0]; // 传入的函数需要保证最后一个参数是mode
+        const attributes = {
+            a_Position: {
+                numComponents: 2,
+                data: [].concat(...vertices.map(v => this.normVec2D(v)))
+            }
+        };
+        return this.drawFigure2D(color, mode, attributes);
+    }
+}
+
+const drawFigureBindings = {
+    drawTriangle: bindDrawing2D((points: Array<MV.Vector2D>, mode: "fill" | "stroke" = "fill") => points),
+    drawCircle: bindDrawing2D(createCircleVertices),
+    drawBezierCurve: bindDrawing2D(createBezierCurveVertices)
+};
+
 declare module "./canvas.js" {
     interface Canvas {
         setLineThickness(thickness: number): void;
         drawFigure2D(color: string | number[], mode: "fill" | "stroke", attributes?: { [key: string]: WebGLAttribute }, uniforms?: { [key: string]: WebGLUniformType }): WebGLRenderingObject;
-        drawTriangle(points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke"): WebGLRenderingObject;
-        drawCircle(center: [number, number], radius: number, color: string | number[], mode: "fill" | "stroke"): WebGLRenderingObject;
-        drawBezierCurve(points: Array<[number, number]>, color: string | number[], mode: "fill" | "stroke"): WebGLRenderingObject;
+        drawTriangle: typeof drawFigureBindings.drawTriangle;
+        drawCircle: typeof drawFigureBindings.drawCircle;
+        drawBezierCurve: typeof drawFigureBindings.drawBezierCurve;
     }
 }
 
@@ -95,39 +118,8 @@ Object.assign(Canvas.prototype, {
         return this.newObject(source, this.fillOrStroke(mode), attributes, uniforms);
     },
 
-    drawTriangle(this: Canvas, points: Array<MV.Vector2D>, color: string | number[], mode: "fill" | "stroke") {
-        let attributes = {
-            a_Position: {
-                numComponents: 2,
-                data: [].concat(...points.map(v => this.normVec2D(v)))
-            }
-        };
-        return this.drawFigure2D(color, mode, attributes);
-    },
-
-    drawCircle(this: Canvas, center: MV.Vector2D, radius: number, color: string | number[], mode: "fill" | "stroke") {
-        let verts = createCircleVertices(center, radius, mode);
-        let attributes = {
-            a_Position: {
-                numComponents: 2,
-                data: [].concat(...verts.map(v => this.normVec2D(v)))
-            }
-        };
-        return this.drawFigure2D(color, mode, attributes);
-    },
-
-    drawBezierCurve(this: Canvas, points: Array<MV.Vector2D>, color: string | number[], mode: "fill" | "stroke") {
-        let verts = createBezierCurveVertices(points);
-        let attributes = {
-            a_Position: {
-                numComponents: 2,
-                data:  [].concat(...verts.map(v => this.normVec2D(v)))
-            }
-        };
-        return this.drawFigure2D(color, mode, attributes);
-    },
-
     setLineThickness(this: Canvas, thickness: number) {
         this.gl.lineWidth(thickness);
     },
-});
+
+}, drawFigureBindings);
