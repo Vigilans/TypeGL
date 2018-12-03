@@ -1,5 +1,5 @@
 import * as MV from "./MV.js";
-import { WebGLAttributeMap, WebGLAttribute, WebGLUniformType, WebGLArray } from "./webgl-extension.js";
+import { WebGLAttributeMap, WebGLAttribute, WebGLUniformType, WebGLArray, ShaderSource } from "./webgl-extension.js";
 import { WebGLRenderingObject } from "./webgl-object.js";
 import { Canvas } from "./canvas.js";
 
@@ -18,15 +18,11 @@ export function createPlaneVertices(
 
     for (let z = 0; z <= subdivisionsDepth; z++) {
         for (let x = 0; x <= subdivisionsWidth; x++) {
-            const u = x / subdivisionsWidth;
-            const v = z / subdivisionsDepth;
-            positions.push(
-                width * u - width * 0.5,
-                0,
-                depth * v - depth * 0.5
-            );
+            const u = x / subdivisionsWidth - 0.5;
+            const v = z / subdivisionsDepth - 0.5;
+            positions.push(width * u, 0, depth * v);
+            texCoords.push(u + 0.5, v + 0.5);
             normals.push(0, 1, 0);
-            texCoords.push(u, v);
         }
     }
 
@@ -133,9 +129,9 @@ export function createSphereVertices(
 }
 
 export function bindDrawing3D<T extends any[]>(createVertices: (..._Args: T) => WebGLAttributeMap) {
-    return function (this: Canvas, color: string | number[], mode: "fill" | "stroke", ...args: T) {
+    return function (this: Canvas, color: string | number[], mode: "fill" | "stroke", source: ShaderSource, ...args: T) {
         const attributes = createVertices(...args);
-        return this.drawFigure3D(color, mode, attributes);
+        return this.drawFigure3D(color, mode, source, attributes);
     }
 }
 
@@ -146,7 +142,12 @@ const drawFigureBindings = {
 
 declare module "./canvas.js" {
     interface Canvas {
-        drawFigure3D(color: string | number[], mode: "fill" | "stroke", attributes?: { [key: string]: WebGLAttribute }, uniforms?: { [key: string]: WebGLUniformType }): WebGLRenderingObject;
+        drawFigure3D(
+            color: string | number[], 
+            mode: "fill" | "stroke", 
+            source?: ShaderSource,  
+            attributes?: { [key: string]: WebGLAttribute }, 
+            uniforms?: { [key: string]: WebGLUniformType }): WebGLRenderingObject;
         drawPlane: typeof drawFigureBindings.drawPlane;
         drawSphere: typeof drawFigureBindings.drawSphere;
     }
@@ -157,12 +158,13 @@ Object.assign(Canvas.prototype, {
         this: Canvas,
         color: string | number[],
         mode: "fill" | "stroke",
+        source?: ShaderSource,
         attributes?: { [key: string]: WebGLAttribute },
         uniforms?: { [key: string]: WebGLUniformType }
     ) {
         attributes = attributes || {};
         uniforms = uniforms || {};
-        const source = {
+        source = source || {
             vertSrc: `
                 attribute vec4 a_Position;
 
@@ -172,15 +174,21 @@ Object.assign(Canvas.prototype, {
             `,
             fragSrc: `
                 precision mediump float;
-                uniform vec3 u_Color;
+                uniform vec4 u_Color;
                 
                 void main() {
-                    gl_FragColor = vec4(u_Color, 1.0);
-                }            
+                    gl_FragColor = u_Color;
+                }
             `
         };
-        Object.assign(uniforms, { u_Color: this.normRgb(color) });
-        return this.newObject(source, this.fillOrStroke(mode), attributes, uniforms);
+        Object.assign(uniforms, { u_Color: [...this.normRgb(color), 1.0] });
+        let drawMode: number;
+        switch (mode) {
+            case "fill": drawMode = this.gl.TRIANGLES; break;
+            case "stroke": drawMode = this.gl.LINES; break;
+            default: throw Error(`Invalid mode: ${mode}`);
+        }
+        return this.newObject(source, drawMode, attributes, uniforms);
     },
 }, drawFigureBindings);
 
@@ -402,29 +410,27 @@ export function generateNormals(model: WebGLAttributeMap, maxAngle: number) {
     };
 }
 
-function makeIndexedIndicesFn(model: WebGLAttributeMap) {
-    const indices = model.indices.data;
-    let ndx = 0;
-    const fn = function () {
-        return indices[ndx++];
-    };
-    fn.reset = function () {
-        ndx = 0;
-    };
-    fn.numElements = indices.length;
-    return fn;
+interface Iterator {
+    (): number;
+    reset(): void;
+    numElements: number;
 }
 
-function makeUnindexedIndicesFn(model: WebGLAttributeMap) {
+function makeIndexedIndicesFn(model: WebGLAttributeMap) : Iterator {
+    const indices = model.indices.data;
     let ndx = 0;
-    const fn = function () {
-        return ndx++;
-    };
-    fn.reset = function () {
-        ndx = 0;
-    }
-    fn.numElements = model.positions.data.length / 3;
-    return fn;
+    return Object.assign(() => indices[ndx++], {
+        reset: () => ndx = 0,
+        numElements: indices.length
+    });
+}
+
+function makeUnindexedIndicesFn(model: WebGLAttributeMap): Iterator {
+    let ndx = 0;
+    return Object.assign(() => ndx++, {
+        reset: () => ndx = 0,
+        numElements: model.positions.data.length / 3
+    });
 }
 
 function makeIndiceIterator(model: WebGLAttributeMap) {

@@ -1,4 +1,4 @@
-import { WebGLAttributeMap, WebGLUniformMap } from "./webgl-extension.js";
+import { WebGLAttributeMap, WebGLUniformMap, ShaderSource } from "./webgl-extension.js";
 import { WebGLRenderingObject, WebGLOrientedObject } from "./webgl-object.js";
 import { MatrixStack } from "./matrix-stack.js";
 import * as MV from "./MV.js";
@@ -25,7 +25,7 @@ export class Canvas {
     }
 
     public newObject<T extends WebGLRenderingObject>(
-        source: { vertSrc: string, fragSrc: string }, 
+        source: ShaderSource, 
         mode?: number,
         attributes?: WebGLAttributeMap,
         uniforms?: WebGLUniformMap,
@@ -138,20 +138,12 @@ export class Canvas {
             }
         }
     }
-
-    public fillOrStroke(mode: "fill" | "stroke"): number {
-        switch (mode) {
-            case "fill": return this.gl.TRIANGLE_FAN;
-            case "stroke": return this.gl.LINE_STRIP;
-            default: throw Error(`Invalid mode: ${mode}`);
-        }
-    }
 }
 
 declare module "./canvas.js" {
     interface Canvas {
         newOrientedObject(
-            source: { vertSrc: string, fragSrc: string },
+            source: ShaderSource,
             direction: MV.Vector3D,
             normal: MV.Vector3D, 
             mode?: number,
@@ -163,7 +155,7 @@ declare module "./canvas.js" {
 
 Object.assign(Canvas.prototype, {
     newOrientedObject(this: Canvas,
-        source: { vertSrc: string, fragSrc: string },
+        source: ShaderSource,
         direction: MV.Vector3D,
         normal: MV.Vector3D, 
         mode?: number,

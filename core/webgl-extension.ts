@@ -32,6 +32,8 @@ export interface WebGLProgramInfo {
     uniformSetters: { [key: string]: (info: WebGLUniformType) => void };
 }
 
+export type ShaderSource = { vertSrc: string, fragSrc: string };
+
 declare global {
     // 为 WebGL Context 补充方法
     interface WebGLRenderingContext {

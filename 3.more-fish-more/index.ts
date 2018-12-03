@@ -1,16 +1,17 @@
-import { Canvas, WebGLOrientedObject } from "../core/canvas.js";
+import { Canvas } from "../core/canvas.js";
 import { WebGLAttribute } from "../core/webgl-extension.js";
+import { WebGLOrientedObject } from "../core/webgl-object.js";
 import * as MV from "../core/MV.js"
 import * as gl2d from "../core/2d-figures.js"
 import * as gl3d from "../core/3d-geometry.js"
 import "../core/camera.js"
 import "../core/controller.js"
-import "../core/shadow.js"
+import "../core/lighting.js"
 
 let c = new Canvas("canvas");
 
 function createFishWithCardioid(focusObj: WebGLOrientedObject, source) {
-    let fishVerts = gl2d.getVertsOnBezierCurve([
+    let fishVerts = gl2d.createBezierCurveVertices([
         [313, 0],    [298, 4],   [259, -20], [230, -46], [333, -152],
         [691, -157], [870, -11], [910, 0],   [969, -23], [997, -64] 
     ]);
@@ -107,7 +108,7 @@ async function main() {
 
     //let fish_trop_obj = await createFishWithCardioid(undefined, source);
 
-    c.bindCamera(50, fish_kun_obj, [1, 0, 3]);
+    c.bindCamera(50, undefined, [1, 0, 3]);
  
     c.render(true);
 }
@@ -116,7 +117,7 @@ main();
 
 // 获取一个保龄球瓶模型
 function getBowlingPin() {
-    let verts = gl2d.getVertsOnBezierCurve([
+    let verts = gl2d.createBezierCurveVertices([
         [44, 371], [62, 338], [63, 305], [59, 260], [55, 215], [22, 156], [20, 128],
         [18, 100], [31, 77] , [36, 47],  [41, 17] , [39, -16], [0, -16]
     ]);

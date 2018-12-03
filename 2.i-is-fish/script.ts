@@ -26,7 +26,7 @@ let ctrl: [Controller, Controller] = [{
 }];
 
 let rAngle = 0;
-let rAxis = [0, 0, 1];
+let rAxis = [0, 0, 1] as MV.Vector3D;
 let rMatrix = MV.mat4();
 
 let trackingMouse = false;

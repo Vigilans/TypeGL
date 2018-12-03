@@ -115,7 +115,13 @@ Object.assign(Canvas.prototype, {
             // uniforms.u_Thickness;
         }
         Object.assign(uniforms, { u_Color: this.normRgb(color) });
-        return this.newObject(source, this.fillOrStroke(mode), attributes, uniforms);
+        let drawMode: number;
+        switch (mode) {
+            case "fill": drawMode = this.gl.TRIANGLE_FAN; break;
+            case "stroke": drawMode = this.gl.LINE_STRIP; break;
+            default: throw Error(`Invalid mode: ${mode}`);
+        }
+        return this.newObject(source, drawMode, attributes, uniforms);
     },
 
     setLineThickness(this: Canvas, thickness: number) {

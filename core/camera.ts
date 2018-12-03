@@ -143,8 +143,8 @@ export class Camera {
                     }
                     case "pan": { // 拖动
                         let delta = MV.subtract(MV.vec2(x, y), trackball.lastPlanePos);
-                        trackball.tOffset[0] = -trackball.speed * delta[0] / 3;
-                        trackball.tOffset[1] = -trackball.speed * delta[1] / 3;
+                        trackball.tOffset[0] = -trackball.speed * delta[0] / 10;
+                        trackball.tOffset[1] = -trackball.speed * delta[1] / 10;
                         this.focusBallCenter = MV.transformPoint(
                             MV.translate(trackball.tOffset[0], trackball.tOffset[1], 0),
                             this.focusBallCenter

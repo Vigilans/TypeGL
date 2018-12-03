@@ -1,6 +1,6 @@
 import * as MV from "./MV.js";
 import { Canvas } from "./canvas.js";
-import { WebGLUniformMap } from "./webgl-extension.js";
+import { WebGLUniformMap, ShaderSource } from "./webgl-extension.js";
 import { WebGLRenderingObject } from "./webgl-object.js";
 
 
@@ -9,7 +9,7 @@ declare module "./canvas.js" {
         bindShadow(
             srcObj: WebGLRenderingObject,
             light: MV.Vector3D,
-            source: { vertSrc: string, fragSrc: string }
+            source: ShaderSource
         );
     }
 }
@@ -18,7 +18,7 @@ Object.assign(Canvas.prototype, {
     bindShadow(this: Canvas, 
         srcObj: WebGLRenderingObject,        
         light:MV.Vector3D,
-        source: { vertSrc: string, fragSrc: string }
+        source: ShaderSource
     ) {
         let shadowObj = new WebGLRenderingObject(this.gl);
         let vShader = this.gl.initShader(source.vertSrc, this.gl.VERTEX_SHADER);
