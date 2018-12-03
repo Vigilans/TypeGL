@@ -220,21 +220,5 @@ Object.assign(Canvas.prototype, {
         this.canvas.addEventListener("wheel", event => {
             this.camera.wheelMotion(event.deltaY);
         });
-        this.canvas.addEventListener("keydown", event => {
-            switch (event.key) {
-                case 'z': this.camera.trackball.mode = "rotate"; break;
-                case 'x': this.camera.trackball.mode = "zoom"; break;
-                case 'c': this.camera.trackball.mode = "pan"; break;
-                default: return; // 直接短路
-            }
-            this.camera.trackball.startRecord();
-        });
-        this.canvas.addEventListener("keyup", event => {
-            switch (event.key) {
-                case 'z': case 'x': case 'c': {
-                    this.camera.trackball.stopRecord();
-                }
-            }
-        });
     }
 });

@@ -1,6 +1,7 @@
 import * as MV from "./MV.js";
 import { Canvas } from "./canvas.js";
-import { WebGLRenderingObject , WebGLUniformMap } from "./webgl-extension.js";
+import { WebGLUniformMap } from "./webgl-extension.js";
+import { WebGLRenderingObject } from "./webgl-object.js";
 
 
 declare module "./canvas.js" {
@@ -24,8 +25,7 @@ Object.assign(Canvas.prototype, {
         let fShader = this.gl.initShader(source.fragSrc, this.gl.FRAGMENT_SHADER);
         let program = this.gl.initProgram(vShader, fShader);
 
-        shadowObj.bufferInfo = srcObj.bufferInfo;
-
+        shadowObj.bufferInfo = srcObj.bufferInfo; // 复用Buffer
         shadowObj.programInfo = this.gl.createProgramInfo(program, this.gl.TRIANGLES);
         shadowObj.uniforms = {
             u_Color: [0, 0, 0, 1]
@@ -35,9 +35,8 @@ Object.assign(Canvas.prototype, {
             const T1 = MV.translate(light[0], light[1], light[2]);
             const M = MV.mat4();
             M[3][3] = 0;
-            M[3][1] = -1/light[1];
+            M[3][1] = -1 / light[1];
             const T2 = MV.translate(-light[0], -light[1], -light[2]);
-
             shadowObj.setModelView(MV.mult(T1, M, T2, srcObj.mvMatrix));
         });
     }
