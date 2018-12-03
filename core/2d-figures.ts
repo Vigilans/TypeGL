@@ -34,7 +34,7 @@ export function createBezierCurveVertices(points: Array<MV.Vector2D>, mode: "fil
 
 // 组合函数
 export function bindDrawing2D<T extends any[]>(createVertices: (..._Args: T) => MV.Vector2D[]) {
-    return function (color: string | number[], ...args: T) {
+    return function (this: Canvas, color: string | number[], ...args: T) {
         const vertices = createVertices(...args);
         const mode: "fill" | "stroke" = args.slice(-1)[0]; // 传入的函数需要保证最后一个参数是mode
         const attributes = {

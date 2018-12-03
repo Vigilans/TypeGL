@@ -659,7 +659,7 @@ export function cross(u: Vector3D, v: Vector3D) {
         u[1] * v[2] - u[2] * v[1],
         u[2] * v[0] - u[0] * v[2],
         u[0] * v[1] - u[1] * v[0]
-    ];
+    ] as Vector3D;
 
     return result;
 }
