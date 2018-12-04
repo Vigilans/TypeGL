@@ -73,7 +73,8 @@ export class Camera {
     public constructor(
         public perspective: MV.Matrix, // 视角矩阵
         public focusObj?: WebGLRenderingObject, // focusObj: 当前聚焦的对象，决定了摄像机的聚焦模式
-        public position?: MV.Vector3D, // Camera所处的位置，是Trackball的积累效应
+        public position: MV.Vector3D = [0, 0, 1], // Camera所处的位置，是Trackball的积累效应
+        public up: MV.Vector3D = [0, 1, 0], // Camera的上头位置
         updateSpeed = 50
     ) {
         this.trackball = new Trackball(updateSpeed);
@@ -83,32 +84,50 @@ export class Camera {
                 this.focusBallRadius = MV.length(MV.subtract(this.position, this.focusBallCenter));
             } else {
                 this.focusBallRadius = 2;
-                this.position = MV.add(this.focusBallCenter, MV.vec3(0, 1, 2)) as MV.Vector3D;
+                this.position = MV.add(this.focusBallCenter, MV.vec3(0, 0, 2)) as MV.Vector3D;
             }
         }
     }
 
-    public get worldMatrix() {
-        if (this.focusObj) {
-            let lookAt = MV.lookAt(this.position, this.focusObj.center);
-            return MV.mult(this.perspective, lookAt);
-        } else { // 不聚焦某个对象
-            let lookAt = MV.lookAt(this.position, this.focusBallCenter);
-            return MV.mult(this.perspective, lookAt);
-        }
+    public get center() {
+        return this.focusObj ? this.focusObj.center : this.focusBallCenter;
     }
 
-    // 更新 Camera 的所处位置
+    public get orientation() {
+        return MV.normalize(MV.subtract(this.center, this.position));
+    }
+
+    public get sideAxis() {
+        return MV.normalize(MV.cross(this.orientation, this.up));
+    }
+
+    public get worldMatrix() {
+        const lookAt = MV.lookAt(this.position, this.center, this.up);
+        return MV.mult(this.perspective, lookAt);
+    }
+
+    // 更新 Camera 的所处位置，为了防溢出操碎了心……
     public updatePosition() {
-        const T = MV.translate(...this.trackball.tOffset);
-        if (this.focusObj) {
-            this.position = MV.transformPoint(T, this.position);
-        } else {
-            const TR = MV.translate(...this.focusBallCenter);
-            const R = MV.rotate(this.trackball.rAngle, this.trackball.rAxis);
-            const TR_ = MV.translate(...MV.negate(this.focusBallCenter));
-            this.position = MV.transformPoint(MV.mult(T, TR, R, TR_), this.position);
+        // 旋转变换通过矩阵完成
+        const C = MV.coordSysTransform(MV.vec3(), [this.sideAxis, this.up, MV.negate(this.orientation)]);
+        const R = MV.rotate(-this.trackball.rAngle, this.trackball.rAxis); // 视点沿鼠标反方向旋转
+        const M = MV.mult(MV.inverse4(C), R, C);
+        // 下面只对方向向量作旋转变换，变换完后立即归一化
+        let length = MV.length(MV.subtract(this.position, this.center));
+        let orient = MV.normalize(MV.transformPoint(M, this.orientation));
+        let up = MV.normalize(MV.transformPoint(M, this.up));
+        // 强制调整orient，使orient与up垂直
+        if (MV.dot(orient, up) !== 0) {
+            for (let i = 0; i < up.length; ++i) {
+                if (up[i] !== 0) {
+                    orient[i] -= MV.dot(orient, up) / up[i];
+                    break;
+                }
+            }
         }
+        // 通过向量运算获取新的position
+        this.position = MV.add(this.center, MV.scale(-length, orient), this.trackball.tOffset);
+        this.up = up;
         this.trackball.reset();
     }
 
@@ -116,47 +135,33 @@ export class Camera {
         let curBallPos = trackballView(x, y);
         let trackball = this.trackball
         if (trackball.trackingMouse) {
-            if (this.focusObj) {
-                // 聚焦模式
-                switch (trackball.mode) {
-                    case "rotate": case "pan": { // 旋转
-                        let delta = MV.subtract(MV.vec2(x, y), trackball.lastPlanePos);
-                        trackball.tOffset[0] = trackball.speed * delta[0] / 2;
-                        trackball.tOffset[1] = trackball.speed * delta[1] / 2;
-                        break;
+            switch (trackball.mode) {
+                case "rotate": { // 镜头在聚焦球切面上旋转
+                    const mouseDelta = MV.subtract(curBallPos, trackball.lastBallPos);
+                    const delta = MV.scale(trackball.speed / 10, mouseDelta);
+                    if (!MV.equal(curBallPos, trackball.lastBallPos)) {
+                        trackball.rAxis = MV.cross(trackball.lastBallPos, curBallPos);
+                        trackball.rAngle = MV.length(delta);
                     }
-                    case "zoom": { // 缩放
-                        trackball.tOffset[2] = trackball.speed * (y - trackball.lastPlanePos[1]);
-                        break;
-                    }
+                    break;
                 }
-            } else {
-                // 非聚焦模式
-                switch (trackball.mode) {
-                    case "rotate": { // 旋转
-                        let delta = MV.subtract(curBallPos, trackball.lastBallPos);
-                        trackball.rAngle = trackball.speed * MV.length(delta) / 3;
-                        if (!MV.equal(curBallPos, trackball.lastBallPos)) {
-                            trackball.rAxis = MV.cross(curBallPos, trackball.lastBallPos);
-                        }
-                        break;
+                case "pan": { // 在聚焦球切面上平移相机
+                    const mouseDelta = MV.subtract(MV.vec2(x, y), trackball.lastPlanePos);
+                    const delta = MV.scale(-trackball.speed / 8, mouseDelta);
+                    trackball.tOffset = MV.add(
+                        MV.scale(delta[0], this.sideAxis),
+                        MV.scale(delta[1], this.up)
+                    );
+                    if (!this.focusObj) { // 非聚焦模式下圆心同步平移
+                        this.focusBallCenter = MV.add(trackball.tOffset, this.focusBallCenter);
                     }
-                    case "pan": { // 拖动
-                        let delta = MV.subtract(MV.vec2(x, y), trackball.lastPlanePos);
-                        trackball.tOffset[0] = -trackball.speed * delta[0] / 10;
-                        trackball.tOffset[1] = -trackball.speed * delta[1] / 10;
-                        this.focusBallCenter = MV.transformPoint(
-                            MV.translate(trackball.tOffset[0], trackball.tOffset[1], 0),
-                            this.focusBallCenter
-                        );
-                        break;
-                    }
-                    case "zoom": { // 缩放
-                        let delta = MV.subtract(MV.vec2(x, y), trackball.lastPlanePos);
-                        let direction = MV.normalize(MV.subtract(this.focusBallCenter, this.position));
-                        trackball.tOffset = MV.scale(trackball.speed * delta[1], direction) as MV.Vector3D;
-                        break;
-                    }
+                    break;
+                }
+                case "zoom": { // 沿聚焦球直径平移相机
+                    const mouseDelta = MV.subtract(MV.vec2(x, y), trackball.lastPlanePos);
+                    const delta = MV.scale(trackball.speed, mouseDelta);
+                    trackball.tOffset = MV.scale(delta[1], this.orientation);
+                    break;
                 }
             }
         }
@@ -184,10 +189,10 @@ declare module "./canvas.js" {
 
 Object.assign(Canvas.prototype, {
 
-    bindCamera(this: Canvas, fovy: number, focusObj?: WebGLRenderingObject, initialPos = MV.vec3(), updateSpeed = 25) {
+    bindCamera(this: Canvas, fovy: number, focusObj?: WebGLRenderingObject, initialPos = MV.vec3(), initialUp = MV.vec3(0, 1, 0), updateSpeed = 25) {
         // 建立 Camera，并将 Camera 的更新逻辑推送至更新管道
         let perspective = MV.perspective(fovy, this.size[0] / this.size[1], 1, 2000);
-        this.camera = new Camera(perspective, focusObj, initialPos, updateSpeed);
+        this.camera = new Camera(perspective, focusObj, initialPos, initialUp, updateSpeed);
         this.updatePipeline.push(c => { 
             c.camera.updatePosition();
             for (let obj of c.objectsToDraw) {
