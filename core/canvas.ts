@@ -77,7 +77,10 @@ export class Canvas {
                 
                 if (bindBuffers || obj.bufferInfo !== lastUsedBufferInfo) {
                     lastUsedBufferInfo = obj.bufferInfo;
-                    // Setup all the needed attributes.
+                    // Setup all the needed buffers and attributes.
+                    if (obj.bufferInfo.indices) {
+                        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, obj.bufferInfo.indices);
+                    }
                     for (let [name, attr] of Object.entries(obj.bufferInfo.attributes)) {
                         let setter = obj.programInfo.attributeSetters[name];
                         if (setter) {

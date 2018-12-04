@@ -56,9 +56,9 @@ export function createPlaneVertices(
 
 // 创建一个球体的顶点
 export function createSphereVertices(
-    radius,
-    subdivisionsAxis,
-    subdivisionsHeight,
+    radius: number,
+    subdivisionsAxis: number,
+    subdivisionsHeight: number,
     opt_startLatitudeInRadians = 0,
     opt_endLatitudeInRadians = Math.PI,
     opt_startLongitudeInRadians = 0,
