@@ -90,3 +90,25 @@ export class WebGLOrientedObject extends WebGLRenderingObject {
         this.normal = MV.normalize(MV.subtract(MV.transformPoint(m, abs_norm), this.center));
     }
 }
+
+/*
+Input: "rgb(r,g,b)" or "#rrggbb" or [r, g, b] in [0, 255]
+Output: [r, g, b] in [0, 1] 
+*/
+export function normRgb(rgb: number[] | string): number[] {
+    if (typeof rgb == "object") {
+        return (rgb as number[]).map(v => v / 255);
+    } else if (typeof rgb == "string") {
+        let strRgb = rgb as string;
+        let hashReg = /#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})/i;
+        let rgbReg = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/;
+        switch (true) {
+            case hashReg.test(strRgb):
+                return normRgb(hashReg.exec(strRgb).slice(1).map(v => Number(`0x${v}`)));
+            case rgbReg.test(strRgb):
+                return normRgb(rgbReg.exec(strRgb).slice(1).map(Number));
+            default:
+                throw Error("invalid rgb format");
+        }
+    }
+}

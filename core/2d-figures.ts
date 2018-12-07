@@ -1,6 +1,6 @@
 import { Canvas } from "./canvas.js";
 import { WebGLAttribute, WebGLUniformType } from "./webgl-extension.js";
-import { WebGLRenderingObject } from "./webgl-object.js";
+import { WebGLRenderingObject, normRgb } from "./webgl-object.js";
 import * as MV from "./MV.js";
 
 export function createCircleVertices(center: MV.Vector2D, radius: number, mode: "fill" | "stroke") {
@@ -114,7 +114,7 @@ Object.assign(Canvas.prototype, {
             // attributes.a_Miter = { numComponents: 1, data: miters };
             // uniforms.u_Thickness;
         }
-        Object.assign(uniforms, { u_Color: this.normRgb(color) });
+        Object.assign(uniforms, { u_Color: normRgb(color) });
         let drawMode: number;
         switch (mode) {
             case "fill": drawMode = this.gl.TRIANGLE_FAN; break;

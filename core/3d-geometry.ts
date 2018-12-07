@@ -1,6 +1,6 @@
 import * as MV from "./MV.js";
 import { WebGLAttributeMap, WebGLAttribute, WebGLUniformType, WebGLArray, ShaderSource } from "./webgl-extension.js";
-import { WebGLRenderingObject } from "./webgl-object.js";
+import { WebGLRenderingObject, normRgb } from "./webgl-object.js";
 import { Canvas } from "./canvas.js";
 
 // 创建一个平面的顶点
@@ -129,9 +129,9 @@ export function createSphereVertices(
 }
 
 export function bindDrawing3D<T extends any[]>(createVertices: (..._Args: T) => WebGLAttributeMap) {
-    return function (this: Canvas, color: string | number[], mode: "fill" | "stroke", source: ShaderSource, ...args: T) {
+    return function (this: Canvas, color: string | number[], mode: "fill" | "stroke", source?: ShaderSource, center?: MV.Vector3D, ...args: T) {
         const attributes = createVertices(...args);
-        return this.drawFigure3D(color, mode, source, attributes);
+        return this.drawFigure3D(color, mode, source, center, attributes);
     }
 }
 
@@ -144,8 +144,9 @@ declare module "./canvas.js" {
     interface Canvas {
         drawFigure3D(
             color: string | number[], 
-            mode: "fill" | "stroke", 
-            source?: ShaderSource,  
+            mode: "fill" | "stroke",
+            source?: ShaderSource,
+            center?: MV.Vector3D,
             attributes?: { [key: string]: WebGLAttribute }, 
             uniforms?: { [key: string]: WebGLUniformType }): WebGLRenderingObject;
         drawPlane: typeof drawFigureBindings.drawPlane;
@@ -159,6 +160,7 @@ Object.assign(Canvas.prototype, {
         color: string | number[],
         mode: "fill" | "stroke",
         source?: ShaderSource,
+        center?: MV.Vector3D,
         attributes?: { [key: string]: WebGLAttribute },
         uniforms?: { [key: string]: WebGLUniformType }
     ) {
@@ -181,14 +183,16 @@ Object.assign(Canvas.prototype, {
                 }
             `
         };
-        Object.assign(uniforms, { u_Color: [...this.normRgb(color), 1.0] });
+        Object.assign(uniforms, { u_Color: [...normRgb(color), 1.0] });
         let drawMode: number;
         switch (mode) {
             case "fill": drawMode = this.gl.TRIANGLES; break;
             case "stroke": drawMode = this.gl.LINES; break;
             default: throw Error(`Invalid mode: ${mode}`);
         }
-        return this.newObject(source, drawMode, attributes, uniforms);
+        let obj = this.newObject(source, drawMode, attributes, uniforms);
+        obj.transform(MV.translate(...center));
+        return obj;
     },
 }, drawFigureBindings);
 
@@ -266,7 +270,7 @@ export function lathePoints(
 
 export function generateNormals(model: WebGLAttributeMap, maxAngle: number) {
     const positions = model.position.data as number[];
-    const texcoords = model.texcoord.data as number[];
+    const texCoords = model.texCoord.data as number[];
 
     // first compute the normal of each face
     let getNextIndex = makeIndiceIterator(model);
@@ -286,7 +290,18 @@ export function generateNormals(model: WebGLAttributeMap, maxAngle: number) {
         const v2 = positions.slice(n2, n2 + 3) as MV.Vector3D;
         const v3 = positions.slice(n3, n3 + 3) as MV.Vector3D;
 
-        faceNormals.push(MV.normalize(MV.cross(MV.subtract(v1, v2), MV.subtract(v3, v2))));
+        const [dv1, dv2] = [MV.subtract(v1, v2), MV.subtract(v3, v2)];
+        let faceNormal: MV.Vector3D;
+        if (MV.length(dv1) && MV.length(dv2)) { 
+            faceNormal = MV.cross(dv1, dv2);
+        } else if (MV.length(dv1) && !MV.length(dv2)) { // 若存在零向量，则任找一个与非零向量垂直的法向量即可
+            faceNormal = MV.cross([dv1[0] + 1, dv1[1] - 1, dv1[2]], dv1);
+        } else if (!MV.length(dv1) && MV.length(dv2)) {
+            faceNormal = MV.cross([dv2[0] + 1, dv2[1] - 1, dv2[2]], dv2);
+        } else { // 两个都是零向量，任找一个即可
+            faceNormal = [0, 1, 0];
+        }
+        faceNormals.push(MV.normalize(faceNormal));
     }
 
     let tempVerts: { [key: string]: number } = {};
@@ -357,7 +372,7 @@ export function generateNormals(model: WebGLAttributeMap, maxAngle: number) {
     const newNormals: number[] = [];
 
     function getNewVertIndex(x, y, z, nx, ny, nz, u, v) {
-        const vertId = arguments.toString();
+        const vertId = [...arguments].toString();
         const ndx = tempVerts[vertId];
         if (ndx !== undefined) {
             return ndx;
@@ -397,16 +412,16 @@ export function generateNormals(model: WebGLAttributeMap, maxAngle: number) {
             newVertIndices.push(getNewVertIndex(
                 positions[poffset + 0], positions[poffset + 1], positions[poffset + 2],
                 norm[0], norm[1], norm[2],
-                texcoords[toffset + 0], texcoords[toffset + 1]
+                texCoords[toffset + 0], texCoords[toffset + 1]
             ));
         }
     }
 
     return {
-        position: { numComponents: 3, newPositions },
-        texCoord: { numComponents: 2, newTexcoords },
-        normal: { numComponents: 3, newNormals },
-        indices: { numComponents: 3, newVertIndices },
+        position: { numComponents: 3, data: newPositions },
+        texCoord: { numComponents: 2, data: newTexcoords },
+        normal: { numComponents: 3, data: newNormals },
+        indices: { numComponents: 3, data: newVertIndices },
     };
 }
 

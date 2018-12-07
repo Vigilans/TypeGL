@@ -7,10 +7,12 @@ export abstract class Controller {
         public obj: WebGLRenderingObject, // 被托管控制的对象
         offset: MV.Vector3D = [0, 0, 0], // 初始物体中心相对于原点的偏移
         scale:  number = 0.0, // 初始等比缩放比例
-        public speed:  number = 1.0  // 变化速度 
+        rotate: MV.Vector3D = [0, 0, 0], // 三个方向旋转角（先X再Y再Z）
+        public speed:  number = 1.0  // 变化速度
     ) {
         this.T = MV.mult(MV.translate(...offset), this.T);
         this.S = MV.mult(MV.scalem(scale, scale, scale), this.S);
+        this.R = MV.mult(MV.rotateZ(rotate[2]), MV.rotateY(rotate[1]), MV.rotateX(rotate[0]));
     }
 
     public T: MV.Matrix = MV.mat4(); // 平移矩阵的累积
@@ -51,8 +53,8 @@ class DefaultController extends Controller {
                 this.T = MV.mult(MV.translate(0, 0, delta), this.T);
                 break;
             }
-            case 'C': sgn = -1; 
-            case 'Z': { // 沿Y轴旋转
+            case 'A': sgn = -1; 
+            case 'D': { // 沿Y轴旋转
                 const delta = sgn * this.speed * 0.05;
                 this.R = MV.mult(MV.rotateY(delta), this.R);
                 break;
@@ -79,12 +81,12 @@ class OrientedController extends Controller {
             }
             case 'S': sgn = -1;
             case 'W': { // 前进/后退
-                const delta = sgn * this.speed * 0.2;
+                const delta = sgn * this.speed * 0.5;
                 this.T = MV.mult(MV.translate(...MV.scale(delta, this.obj.direction)), this.T);
                 break;
             }
-            case 'A': sgn = -1; 
-            case 'D': { // 沿法线旋转
+            case 'D': sgn = -1; 
+            case 'A': { // 沿法线旋转
                 const delta = sgn * this.speed * 0.2;
                 this.R = MV.mult(MV.rotate(delta, this.obj.normal), this.R);
                 break;
@@ -115,6 +117,7 @@ declare module "./canvas.js" {
             init?: {
                 offset?: MV.Vector3D;
                 scale?:  number;
+                rotate?: MV.Vector3D;
                 speed?:  number;
             }
         );
@@ -129,6 +132,7 @@ Object.assign(Canvas.prototype, {
             angles?: MV.Vector3D;
             offset?: MV.Vector3D;
             scale?:  number;
+            rotate?: MV.Vector3D;
             speed?:  number;
         }
     ) {
@@ -136,6 +140,7 @@ Object.assign(Canvas.prototype, {
         init = Object.assign({
             offset: [0, 0, 0],
             scale: 1.0,
+            rotate: [0, 0, 0],
             speed: 1.0
         }, init);
 
@@ -176,11 +181,11 @@ Object.assign(Canvas.prototype, {
         
         // 绑定 obj 至新的 Controller
         let controller: Controller;
-        const { offset, scale, speed } = init;
+        const { offset, scale, rotate, speed } = init;
         if (obj instanceof WebGLOrientedObject) {
-            controller = new OrientedController(obj, offset, scale, speed);
+            controller = new OrientedController(obj, offset, scale, rotate, speed);
         } else { // RenderingObject是基类，要放在最后
-            controller = new DefaultController(obj, offset, scale, speed);
+            controller = new DefaultController(obj, offset, scale, rotate, speed);
         }
         this.controllers.push(controller);
     }
