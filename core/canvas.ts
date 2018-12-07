@@ -43,17 +43,18 @@ export class Canvas {
     }
 
     public sourceByDom(vNode: string, fNode: string) {
-        let [vertSrc, fragSrc] = [vNode, fNode].map(document.getElementById).map((e: HTMLScriptElement) => e.text);
+        const [vertSrc, fragSrc] = [vNode, fNode].map(e => document.getElementById(e)).map((e: HTMLScriptElement) => e.text);
         return { vertSrc, fragSrc };
     }
 
     public async sourceByFile(vPath: string, fPath: string) {
-        let [vertSrc, fragSrc] = await Promise.all([vPath, fPath].map(async p => await (await fetch(p)).text()));
+        const [vertSrc, fragSrc] = await Promise.all([vPath, fPath].map(async p => await (await fetch(p)).text()));
         return { vertSrc, fragSrc };
     }
 
     public render(anime?: boolean) {
         this.gl.viewport(0, 0, ...this.size);
+        this.gl.enable(this.gl.DEPTH_TEST);
 
         let lastUsedProgramInfo = null;
         let lastUsedBufferInfo = null;
@@ -69,7 +70,9 @@ export class Canvas {
             for (let obj of this.objectsToDraw) {
                 let bindBuffers = false;
                 
-                if (obj.programInfo !== lastUsedProgramInfo) {
+                if (!obj.programInfo) {
+                    continue; // do not draw this object
+                } if (obj.programInfo !== lastUsedProgramInfo) {
                     lastUsedProgramInfo = obj.programInfo;
                     this.gl.useProgram(obj.programInfo.program);
                     bindBuffers = true;
@@ -118,28 +121,6 @@ export class Canvas {
             2 * vec[0] / this.size[0] - 1,
             2 * (this.size[1] - vec[1]) / this.size[1] - 1
         ];
-    }
-
-    /*
-        Input: "rgb(r,g,b)" or "#rrggbb" or [r, g, b] in [0, 255]
-        Output: [r, g, b] in [0, 1] 
-    */
-    public normRgb(rgb: number[] | string): number[] {
-        if (typeof rgb == "object") {
-            return (rgb as number[]).map(v => v / 255);
-        } else if (typeof rgb == "string") {
-            let strRgb = rgb as string;
-            let hashReg = /#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})/i;
-            let rgbReg = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/;
-            switch (true) {
-                case hashReg.test(strRgb):
-                    return this.normRgb(hashReg.exec(strRgb).slice(1).map(v => Number(`0x${v}`)));
-                case rgbReg.test(strRgb):
-                    return this.normRgb(rgbReg.exec(strRgb).slice(1).map(Number));
-                default:
-                    throw Error("invalid rgb format");
-            }
-        }
     }
 }
 

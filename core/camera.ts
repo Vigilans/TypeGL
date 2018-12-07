@@ -103,31 +103,34 @@ export class Camera {
 
     public get worldMatrix() {
         const lookAt = MV.lookAt(this.position, this.center, this.up);
-        return MV.mult(this.perspective, lookAt);
+        return lookAt;
     }
 
     // 更新 Camera 的所处位置，为了防溢出操碎了心……
     public updatePosition() {
         // 旋转变换通过矩阵完成
-        const C = MV.coordSysTransform(MV.vec3(), [this.sideAxis, this.up, MV.negate(this.orientation)]);
-        const R = MV.rotate(-this.trackball.rAngle, this.trackball.rAxis); // 视点沿鼠标反方向旋转
-        const M = MV.mult(MV.inverse4(C), R, C);
-        // 下面只对方向向量作旋转变换，变换完后立即归一化
-        let length = MV.length(MV.subtract(this.position, this.center));
-        let orient = MV.normalize(MV.transformPoint(M, this.orientation));
-        let up = MV.normalize(MV.transformPoint(M, this.up));
-        // 强制调整orient，使orient与up垂直
-        if (MV.dot(orient, up) !== 0) {
-            for (let i = 0; i < up.length; ++i) {
-                if (up[i] !== 0) {
-                    orient[i] -= MV.dot(orient, up) / up[i];
-                    break;
+        if (this.trackball.rAngle !== 0) {
+            const C = MV.coordSysTransform(MV.vec3(), [this.sideAxis, this.up, MV.negate(this.orientation)]);
+            const R = MV.rotate(-this.trackball.rAngle, this.trackball.rAxis); // 视点沿鼠标反方向旋转
+            const M = MV.mult(MV.inverse4(C), R, C);
+            // 下面只对方向向量作旋转变换，变换完后立即归一化
+            let length = MV.length(MV.subtract(this.position, this.center));
+            let orient = MV.normalize(MV.transformPoint(M, this.orientation));
+            let up = MV.normalize(MV.transformPoint(M, this.up));
+            // 强制调整orient，使orient与up垂直
+            if (MV.dot(orient, up) !== 0) {
+                for (let i = 0; i < up.length; ++i) {
+                    if (up[i] !== 0) {
+                        orient[i] -= MV.dot(orient, up) / up[i];
+                        break;
+                    }
                 }
             }
+            // 通过向量运算获取新的position
+            this.position = MV.add(this.center, MV.scale(-length, orient));
+            this.up = up;
         }
-        // 通过向量运算获取新的position
-        this.position = MV.add(this.center, MV.scale(-length, orient), this.trackball.tOffset);
-        this.up = up;
+        this.position = MV.add(this.position, this.trackball.tOffset);
         this.trackball.reset();
     }
 
@@ -196,7 +199,7 @@ Object.assign(Canvas.prototype, {
         this.updatePipeline.push(c => { 
             c.camera.updatePosition();
             for (let obj of c.objectsToDraw) {
-                obj.uniforms.u_WorldMatrix = MV.flatten(c.camera.worldMatrix);
+                obj.uniforms.u_WorldMatrix = MV.flatten(MV.mult(c.camera.perspective, c.camera.worldMatrix));
             }
         });
         

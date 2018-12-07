@@ -620,6 +620,11 @@ export function distance(u: Vector, v: Vector) {
     return length(subtract(u, v));
 }
 
+
+export function sum(v: Vector) {
+    return v.reduce((sum, cur) => sum + cur);
+}
+
 export function lerp<T extends number | Vector>(u: T, v: T, t: number): T {
     if (typeof u === "number" && typeof v == "number") {
         return (u + (v - u) * t) as T & number;
