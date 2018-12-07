@@ -6,6 +6,7 @@ import * as gl3d from "../core/3d-geometry.js"
 import "../core/camera.js"
 import "../core/controller.js"
 import "../core/lighting.js"
+import { normRgb } from "../core/webgl-object.js";
 
 let c = new Canvas("canvas");
 
@@ -17,10 +18,10 @@ async function main() {
     delete fish_aqua.indices;
     let fish_aqua_obj = c.newOrientedObject(
         source, [0, 0, 1], [0, 1, 0], c.gl.LINES,
-        fish_aqua, { u_Color: [...c.normRgb([156, 43, 51]), 1] }
+        fish_aqua, { u_Color: [...normRgb([156, 43, 51]), 1] }
     );
 
-    c.bindShadow(fish_aqua_obj, [2, 5, 0], source);
+    //c.bindShadow(fish_aqua_obj, [2, 5, 0], source);
 
     let fish_kun = JSON.parse(await (await fetch("fish-kun.json")).text());
     delete fish_kun.indices;
@@ -29,7 +30,7 @@ async function main() {
         fish_kun, { u_Color: [1, 0.5, 0, 1] }
     );
 
-    c.bindShadow(fish_kun_obj, [2, 5, 0], source);
+    //c.bindShadow(fish_kun_obj, [2, 5, 0], source);
     
     // 初始，鱼头指向x轴负方向，令其顺时针旋转90度
     
