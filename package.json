@@ -1,14 +1,14 @@
 {
-  "name": "graphics",
+  "name": "typegl",
   "version": "1.0.0",
-  "description": "Computer Graphics Course",
-  "author": "zjd&lsc&yzh",
+  "description": "Mini webgl library for typescript",
+  "author": "yzh, lsc, zjd",
   "license": "MIT",
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-connect": "^5.6.1"
+    "gulp": "^4.0.0",
+    "gulp-connect": "^5.7.0"
   },
   "dependencies": {
-    "polyline-normals": "^2.0.2"
+    "@types/node": "^10.12.18"
   }
 }

@@ -1,6 +1,6 @@
-let gulp = require('gulp');
-let connect = require('gulp-connect');
-let os = require('os');
+const gulp = require('gulp');
+const connect = require('gulp-connect');
+const os = require('os');
 
 gulp.task('connect', () => 
     connect.server({
@@ -18,8 +18,8 @@ gulp.task('copy', () => {
 });
 
 gulp.task('watch', () => {
-    gulp.watch('./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])', ['copy']);
-    gulp.watch('./dist/**/*.@(html|js|json|glsl[vf])', ['reload']);
+    gulp.watch('./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])', gulp.series('copy'));
+    gulp.watch('./dist/**/*.@(html|js|json|glsl[vf])', gulp.series('reload'));
 });
 
 gulp.task('compile', () => {
@@ -38,4 +38,4 @@ gulp.task('compile', () => {
     return child;
 });
 
-gulp.task('default', ['connect', 'copy', 'watch', 'compile']);
+gulp.task('default', gulp.parallel('connect', 'copy', 'watch', 'compile'));
