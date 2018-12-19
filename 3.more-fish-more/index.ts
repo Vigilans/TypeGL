@@ -34,7 +34,7 @@ async function main() {
     
     // 初始，鱼头指向x轴负方向，令其顺时针旋转90度
     
-    let baseMVMatrix = MV.rotateZ(-Math.PI / 2);
+    let baseWorldMatrix = MV.rotateZ(-Math.PI / 2);
     let direction = [0, 1, 0] as MV.Vector3D;
     let normal = [1, 0, 0] as MV.Vector3D;
 
@@ -51,7 +51,7 @@ async function main() {
         const deltaTheta = MV.includedAngle(newDir, fish_aqua_obj.direction);
         const tMatrix = MV.translate(...fish_kun_obj.center);
         const cstMatrix = MV.coordSysTransform(fish_kun_obj.center, fish_kun_obj.coordSystem);
-        fish_aqua_obj.setModelView(MV.mult(
+        fish_aqua_obj.setModel(MV.mult(
             // MV.inverse4(tMatrix),
             MV.inverse4(cstMatrix),
             MV.translate(x, y, 0),

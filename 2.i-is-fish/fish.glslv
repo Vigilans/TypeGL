@@ -1,7 +1,7 @@
 
 uniform float u_time;
 uniform vec4 u_Color;
-uniform mat4 u_MVMatrix;
+uniform mat4 u_WorldMatrix;
 uniform mat4 u_RMatrix;
 
 attribute vec4 a_Position;
@@ -34,6 +34,6 @@ void main() {
 //   v_Normal = (worldInverseTranspose * vec4(a_Normal, 0)).xyz;
 
     v_Color = u_Color;
-    v_Position = u_RMatrix * u_MVMatrix * a_Position;
+    v_Position = u_RMatrix * u_WorldMatrix * a_Position;
     gl_Position = v_Position;
 }

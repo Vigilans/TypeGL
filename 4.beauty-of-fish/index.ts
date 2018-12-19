@@ -31,10 +31,10 @@ async function main() {
     const fish_aqua_attr = fish_aqua_raw.models[0].fields as WebGLAttributeMap;
     const fish_aqua = c.newOrientedObject(
         source, [0, 0, 1], [0, 1, 0], c.gl.TRIANGLES, fish_aqua_attr, { 
-            u_MAmbient:  [1.0, 0.0, 1.0, 1.0],
-            u_MDiffuse:  [1.0, 0.8, 1.0, 1.0],
-            u_MSpecular: [1.0, 1.0, 1.0, 1.0],
-            u_MShininess: 1
+            u_Ambient:  [1.0, 0.0, 1.0, 1.0],
+            u_Diffuse:  [1.0, 0.8, 1.0, 1.0],
+            u_Specular: [1.0, 1.0, 1.0, 1.0],
+            u_Shininess: 1.0
         }
     );
 
@@ -79,10 +79,10 @@ function createFishWithCardioid(focusObj: WebGLOrientedObject, source: ShaderSou
     let fishAttr = gl3d.lathePoints(fishVerts, [0.002, 0.002, 0.002], [1, 0, 0], undefined, undefined, undefined, false, false);
     let fishObj = c.newOrientedObject(
         source, [0, 1, 0], [1, 0, 0], c.gl.TRIANGLES, gl3d.generateNormals(fishAttr, Math.PI / 6), { 
-            u_MAmbient:  [0.0, 1.0, 0.0, 1.0],
-            u_MDiffuse:  [0.4, 0.8, 0.4, 1.0],
-            u_MSpecular: [0.0, 0.4, 0.4, 1.0],
-            u_MShininess: 300.0
+            u_Ambient:  [0.0, 1.0, 0.0, 1.0],
+            u_Diffuse:  [0.4, 0.8, 0.4, 1.0],
+            u_Specular: [0.0, 0.4, 0.4, 1.0],
+            u_Shininess: 300.0
         }
     );
 
@@ -98,7 +98,7 @@ function createFishWithCardioid(focusObj: WebGLOrientedObject, source: ShaderSou
         const newDir = MV.normalize([dx, dy, 0]);
         const deltaTheta = MV.includedAngle(newDir, fishObj.initDir);
         const cstMatrix = MV.coordSysTransform(focusObj.center, focusObj.coordSystem);
-        fishObj.setModelView(MV.mult(
+        fishObj.setModel(MV.mult(
             MV.inverse4(cstMatrix),
             MV.translate(y, 0, x),
             MV.rotateZ(deltaTheta),
@@ -122,10 +122,10 @@ function drawCube(source: ShaderSource) {
             data: [0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1]
         }
     }, {
-        u_MAmbient:  [0.0, 1.0, 0.0, 1.0],
-        u_MDiffuse:  [0.4, 0.8, 0.4, 1.0],
-        u_MSpecular: [0.0, 0.4, 0.4, 1.0],
-        u_MShininess: 300.0
+        u_Ambient:  [0.0, 1.0, 0.0, 1.0],
+        u_Diffuse:  [0.4, 0.8, 0.4, 1.0],
+        u_Specular: [0.0, 0.4, 0.4, 1.0],
+        u_Shininess: 300.0
     })
     cube.transform(MV.translate(-10, 0.5, -5));
     return cube;

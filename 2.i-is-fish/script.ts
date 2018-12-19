@@ -159,7 +159,7 @@ async function main() {
         await c.sourceByFile("fish.glslv", "fish.glslf"),
         c.gl.TRIANGLES,
         aqua_fish, {
-            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
+            u_WorldMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
             u_RMatrix: MV.flatten(MV.mat4()),
             u_Color: [1, 0.5, 0, 1]
         }
@@ -171,7 +171,7 @@ async function main() {
         await c.sourceByFile("fish.glslv", "fish.glslf"),
         c.gl.LINES,
         kun, {
-            u_MVMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
+            u_WorldMatrix: MV.flatten(MV.scalem(0.2, 0.2, 0.2)),
             u_RMatrix:  MV.flatten(MV.mat4()),
             u_Color: [1, 0.5, 0, 1]
         }
@@ -206,7 +206,7 @@ async function main() {
         let S = MV.scalem(ctr.scale, ctr.scale, ctr.scale);
         let R = MV.rotateY(ctr.rotateAngle);
         let T = MV.translate(ctr.offsetX, ctr.offsetY, 0);
-        uniforms.u_MVMatrix = MV.flatten(MV.mult(S, R, T));
+        uniforms.u_WorldMatrix = MV.flatten(MV.mult(S, R, T));
         uniforms.u_Color = [1, 0.5, 0, 1];
     
         rMatrix = MV.mult(rMatrix, MV.rotate(rAngle, rAxis));
