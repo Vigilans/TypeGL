@@ -51,6 +51,14 @@
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
             "url": "http://localhost:8080/4.beauty-of-fish"
+        },        
+        {
+            "name": "5.a-fish-game",
+            "type": "chrome",
+            "request": "launch",
+            "webRoot": "${workspaceRoot}/dist",
+            "sourceMaps": true,
+            "url": "http://localhost:8080/5.a-fish-game"
         },
     ]
 }
