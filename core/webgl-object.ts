@@ -9,29 +9,31 @@ export class WebGLRenderingObject {
 
     uniforms: WebGLUniformMap;
 
-    mvMatrix: MV.Matrix = MV.mat4(); // 初始为恒等矩阵
+    worldMatrix: MV.Matrix = MV.mat4(); // 初始为恒等矩阵
 
     center: MV.Vector3D = MV.vec3(); // 初始为坐标原点
     
     constructor(readonly gl: WebGLRenderingContext) {
         // 就算着色器中没有该uniform，也不会出错
         this.uniforms =  {
-            u_MVMatrix: MV.flatten(this.mvMatrix)
+            u_WorldMatrix: MV.flatten(this.worldMatrix)
         };
     }
 
+    getCenter(){return this.center;}
+
     // 直接设置MV矩阵
-    setModelView(m: MV.Matrix) {
-        this.mvMatrix = m;
+    setModel(m: MV.Matrix) {
+        this.worldMatrix = m;
         this.center = MV.transformPoint(m, MV.vec3());
-        this.uniforms.u_MVMatrix = MV.flatten(this.mvMatrix);
+        this.uniforms.u_WorldMatrix = MV.flatten(this.worldMatrix);
     }
 
     // 对MV矩阵实施变换
     transform(m: MV.Matrix) {
-        this.mvMatrix = MV.mult(m, this.mvMatrix);
+        this.worldMatrix = MV.mult(m, this.worldMatrix);
         this.center = MV.transformPoint(m, this.center);
-        this.uniforms.u_MVMatrix = MV.flatten(this.mvMatrix);
+        this.uniforms.u_WorldMatrix = MV.flatten(this.worldMatrix);
     }
 
     draw() {
@@ -75,8 +77,8 @@ export class WebGLOrientedObject extends WebGLRenderingObject {
     }
 
     // 直接设置MV矩阵
-    setModelView(m: MV.Matrix) {
-        super.setModelView(m);
+    setModel(m: MV.Matrix) {
+        super.setModel(m);
         this.direction = MV.normalize(MV.subtract(MV.transformPoint(m, this.initDir), this.center));
         this.normal = MV.normalize(MV.subtract(MV.transformPoint(m, this.initNorm), this.center));
     }
@@ -92,8 +94,8 @@ export class WebGLOrientedObject extends WebGLRenderingObject {
 }
 
 /*
-Input: "rgb(r,g,b)" or "#rrggbb" or [r, g, b] in [0, 255]
-Output: [r, g, b] in [0, 1] 
+    Input: "rgb(r,g,b)" or "#rrggbb" or [r, g, b] in [0, 255]
+    Output: [r, g, b] in [0, 1] 
 */
 export function normRgb(rgb: number[] | string): number[] {
     if (typeof rgb == "object") {

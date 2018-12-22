@@ -120,7 +120,7 @@ declare module "./canvas.js" {
                 rotate?: MV.Vector3D;
                 speed?:  number;
             }
-        );
+        ) : Controller;
     }
 }
 
@@ -158,7 +158,7 @@ Object.assign(Canvas.prototype, {
             this.updatePipeline.push(c => {
                 const controllers = firstUpdated ? [c.curCtrl] : c.controllers; 
                 for (const ctrl of controllers) {
-                    ctrl.obj.setModelView(MV.mult(ctrl.T, ctrl.R, ctrl.S));
+                    ctrl.obj.setModel(MV.mult(ctrl.T, ctrl.R, ctrl.S));
                 }
                 firstUpdated = true;
             });
@@ -188,6 +188,7 @@ Object.assign(Canvas.prototype, {
             controller = new DefaultController(obj, offset, scale, rotate, speed);
         }
         this.controllers.push(controller);
+        return controller;
     }
 
 });

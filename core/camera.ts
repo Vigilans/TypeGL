@@ -101,9 +101,13 @@ export class Camera {
         return MV.normalize(MV.cross(this.orientation, this.up));
     }
 
-    public get worldMatrix() {
+    public get viewMatrix() {
         const lookAt = MV.lookAt(this.position, this.center, this.up);
         return lookAt;
+    }
+
+    public get projectionMatrix() {
+        return this.perspective;
     }
 
     // 更新 Camera 的所处位置，为了防溢出操碎了心……
@@ -139,7 +143,7 @@ export class Camera {
         let trackball = this.trackball
         if (trackball.trackingMouse) {
             switch (trackball.mode) {
-                case "rotate": { // 镜头在聚焦球切面上旋转
+                case "rotate": { // 镜头在聚焦球球面上旋转
                     const mouseDelta = MV.subtract(curBallPos, trackball.lastBallPos);
                     const delta = MV.scale(trackball.speed / 10, mouseDelta);
                     if (!MV.equal(curBallPos, trackball.lastBallPos)) {
@@ -199,7 +203,10 @@ Object.assign(Canvas.prototype, {
         this.updatePipeline.push(c => { 
             c.camera.updatePosition();
             for (let obj of c.objectsToDraw) {
-                obj.uniforms.u_WorldMatrix = MV.flatten(MV.mult(c.camera.perspective, c.camera.worldMatrix));
+                Object.assign(obj.uniforms, {
+                    u_ViewMatrix: MV.flatten(c.camera.viewMatrix),
+                    u_ProjectionMatrix: MV.flatten(c.camera.projectionMatrix)
+                })
             }
         });
         
