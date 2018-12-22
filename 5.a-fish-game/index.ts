@@ -76,7 +76,7 @@ async function main() {
     c.gl.activeTexture(c.gl.TEXTURE0);
  
     setInterval(()=>{
-        let x = MV.randomNum(-80,80), y = MV.randomNum(-1,15), z = MV.randomNum(-80,80)
+        let x = randomNum(-80,80), y = randomNum(-1,15), z = randomNum(-80,80)
         let newSphere;
         sphereArray.push(newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32))
         newSphere.bindTexture(ball_texture);
@@ -85,7 +85,7 @@ async function main() {
     let totalScore = 0;
     setInterval(function checkCollider(){
         sphereArray.forEach((mySphere,INDEX)=>{
-            let isCollider = MV.collider(fish_kun,mySphere);
+            let isCollider = collider(fish_kun,mySphere);
             if(isCollider){
                 mySphere.transform(MV.translate(100,1000,100));
                 sphereArray.splice(INDEX,1);
@@ -161,3 +161,26 @@ function drawCube(source: ShaderSource) {
 }
 
 main();
+
+function randomNum(minNum,maxNum){ //生成从minNum到maxNum的随机数
+    switch(arguments.length){ 
+        case 1: 
+            return parseInt(Math.random()*minNum+"1",10); 
+        break; 
+        case 2: 
+            return parseInt(Math.random()*(maxNum-minNum+1)+minNum,10); 
+        break; 
+            default: 
+                return 0; 
+            break; 
+    } 
+}
+
+function collider(ObjectA,ObjectB){
+    let posA = ObjectA.getCenter();
+    let posB = ObjectB.getCenter();
+    let dis = [posB[0]-posA[0],posB[1]-posA[1],posB[2]-posA[2]];
+    //console.log(posA,posB,dis,length(dis))
+    if(MV.length(dis) < 5) return true;
+    return false;
+}
