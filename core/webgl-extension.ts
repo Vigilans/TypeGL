@@ -32,6 +32,12 @@ export interface WebGLProgramInfo {
     uniformSetters: { [key: string]: (info: WebGLUniformType) => void };
 }
 
+export interface WebGLFrameBufferInfo {
+    frameBuffer?: WebGLFramebuffer;
+    renderBuffer?: WebGLRenderbuffer;
+    texture: WebGLTexture;
+}
+
 export type ShaderSource = { vertSrc: string, fragSrc: string };
 
 declare global {
@@ -40,8 +46,10 @@ declare global {
         getArrayType(this: WebGLRenderingContext, type: number): typeof Int8Array | typeof Float32Array;
         initShader(this: WebGLRenderingContext, code: string, type: number): WebGLShader | null;
         initProgram(this: WebGLRenderingContext, vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null;
+        initTexture(this: WebGLRenderingContext, image: TexImageSource, unit?: number): WebGLTexture;
         createBufferInfo(this: WebGLRenderingContext, attributes: WebGLAttributeMap) : WebGLBufferInfo;
         createProgramInfo(this: WebGLRenderingContext, program: WebGLProgram, mode: number): WebGLProgramInfo;
+        createFrameBufferInfo(this: WebGLRenderingContext, size: [number, number], level?: number): WebGLFrameBufferInfo;
     }
 
     // 为 Array 补充方法
@@ -173,6 +181,8 @@ Object.assign(WebGLRenderingContext.prototype, {
                     case this.FLOAT_VEC2: return this.uniform2fv(loc, v);
                     case this.FLOAT_VEC3: return this.uniform3fv(loc, v);
                     case this.FLOAT_VEC4: return this.uniform4fv(loc, v);
+                    case this.SAMPLER_2D:
+                    case this.SAMPLER_CUBE:
                     case this.INT: return isArray ? this.uniform1iv(loc, v) : this.uniform1i(loc, v);
                     case this.INT_VEC2: return this.uniform2iv(loc, v);
                     case this.INT_VEC3: return this.uniform3iv(loc, v);
@@ -187,7 +197,81 @@ Object.assign(WebGLRenderingContext.prototype, {
         
         return programInfo;
     },
+
+    initTexture(this: WebGLRenderingContext, image: TexImageSource, level = 0) {
+        const texture = this.createTexture();
+        this.activeTexture(this.TEXTURE0 + level);
+        this.bindTexture(this.TEXTURE_2D, texture);
+        this.texImage2D(this.TEXTURE_2D, 0, this.RGBA, this.RGBA, this.UNSIGNED_BYTE, image);
+        // 检查每个维度是否是 2 的幂
+        if (isPowerOf2(image.width) && isPowerOf2(image.height)) { // 是 2 的幂，一般用贴图
+            this.generateMipmap(this.TEXTURE_2D);
+            this.texParameteri(this.TEXTURE_2D, this.TEXTURE_MIN_FILTER, this.NEAREST_MIPMAP_LINEAR); 
+            this.texParameteri(this.TEXTURE_2D, this.TEXTURE_MAG_FILTER, this.NEAREST); 
+        } else { // 不是 2 的幂，关闭贴图并设置包裹模式为到边缘
+            this.texParameteri(this.TEXTURE_2D, this.TEXTURE_WRAP_S, this.CLAMP_TO_EDGE);
+            this.texParameteri(this.TEXTURE_2D, this.TEXTURE_WRAP_T, this.CLAMP_TO_EDGE);
+            this.texParameteri(this.TEXTURE_2D, this.TEXTURE_MIN_FILTER, this.LINEAR);
+        }
+        //this.bindTexture(this.TEXTURE_2D, null);
+        return texture;
+    },
+
+    createFrameBufferInfo(this: WebGLRenderingContext, size: [number, number], level = 0) {
+        let info = {
+            frameBuffer: this.createFramebuffer(),
+            renderBuffer: this.createRenderbuffer(),
+            texture: this.createTexture()
+        } as WebGLFrameBufferInfo;
+        
+        // 绑定帧缓冲与渲染缓冲
+        this.bindFramebuffer(this.FRAMEBUFFER, info.frameBuffer);
+        this.bindRenderbuffer(this.RENDERBUFFER, info.renderBuffer);
+        this.renderbufferStorage( // 设置渲染缓冲区的存储尺寸
+            this.RENDERBUFFER, this.DEPTH_COMPONENT16, ...size
+        );
+        this.framebufferRenderbuffer( // 把渲染缓冲绑定到当前工作的帧缓冲上
+            this.FRAMEBUFFER, this.DEPTH_ATTACHMENT, this.RENDERBUFFER, info.renderBuffer
+        );
+
+        // 设置当前贴图对象
+        this.activeTexture(this[`TEXTURE${level}`]);
+        this.bindTexture(this.TEXTURE_2D, info.texture);
+        this.framebufferTexture2D( // 把贴图对象也绑定到帧缓冲中
+            this.FRAMEBUFFER, this.COLOR_ATTACHMENT0,
+            this.TEXTURE_2D, info.texture, level
+        );
+        const pixels = new Uint8Array(Array(size[0]*size[1]*4).fill(0.0));
+        this.texImage2D( // 传入一个仅有1像素的贴图
+            this.TEXTURE_2D, level, this.RGBA, size[0], size[1], 0,
+            this.RGBA, this.UNSIGNED_BYTE, pixels
+        );
+        this.texParameteri( // 设置贴图对象的属性
+            this.TEXTURE_2D, this.TEXTURE_MIN_FILTER, this.LINEAR
+        );
+
+        // 取消绑定
+        this.bindFramebuffer(this.FRAMEBUFFER, null);
+        this.bindRenderbuffer(this.RENDERBUFFER, null);
+        this.bindTexture(this.TEXTURE_2D, null);
+        // //绘制到帧缓冲
+        // this.uniform1i(tp, false);
+        // this.bindFramebuffer(this.FRAMEBUFFER, frameBuffer);
+        // this.clear(this.COLOR_BUFFER_BIT | this.DEPTH_BUFFER_BIT);
+        // this.drawElements(this.TRIANGLES, 36, this.UNSIGNED_SHORT, 0);
+
+        // //绘制到屏幕
+        // this.uniform1i(tp, true);
+        // this.bindFramebuffer(this.FRAMEBUFFER, null);
+        // this.clear(this.COLOR_BUFFER_BIT | this.DEPTH_BUFFER_BIT);
+        // this.drawElements(this.TRIANGLES, 36, this.UNSIGNED_SHORT, 0);
+        return info;
+    }
 })
+
+function isPowerOf2(value: number) {
+    return (value & (value - 1)) == 0;
+}
 
 Array.range = function(start, end) {
     return new Array(end - start).fill(start).map((_, i) => start + i);
