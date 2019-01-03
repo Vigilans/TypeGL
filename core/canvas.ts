@@ -1,4 +1,4 @@
-import { WebGLAttributeMap, WebGLUniformMap, ShaderSource } from "./webgl-extension.js";
+import { WebGLAttributeMap, WebGLUniformMap, ShaderSource, WebGLTextureInfo } from "./webgl-extension.js";
 import { WebGLRenderingObject, WebGLOrientedObject } from "./webgl-object.js";
 import { MatrixStack } from "./matrix-stack.js";
 import * as MV from "./MV.js";
@@ -12,6 +12,8 @@ export class Canvas {
 
     public matrixStack: MatrixStack = new MatrixStack();
 
+    public textureInfos: Array<WebGLTextureInfo> = Array(32).fill(null);
+
     public objectsToDraw: Array<WebGLRenderingObject> = [];
 
     public updatePipeline: Array<(c: Canvas, time?: number, deltaTime?: number) => void> = [];
@@ -22,6 +24,27 @@ export class Canvas {
     constructor(canvasId: string) {
         this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
         this.gl = this.canvas.getContext("webgl");
+    }
+
+    public sourceByDom(vNode: string, fNode: string) {
+        const [vertSrc, fragSrc] = [vNode, fNode].map(e => document.getElementById(e)).map((e: HTMLScriptElement) => e.text);
+        return { vertSrc, fragSrc };
+    }
+
+    public async sourceByFile(vPath: string, fPath: string) {
+        const [vertSrc, fragSrc] = await Promise.all([vPath, fPath].map(async p => await (await fetch(p)).text()));
+        return { vertSrc, fragSrc };
+    }
+
+    /*
+        Input: Vec2 in [width, height] origining at top-left
+        Output: Vec2 in [-1, 1] of clip space origining at bottom-left
+    */
+    public normVec2D(vec: [number, number]): [number, number] {
+        return [
+            2 * vec[0] / this.size[0] - 1,
+            2 * (this.size[1] - vec[1]) / this.size[1] - 1
+        ];
     }
 
     public newObject<T extends WebGLRenderingObject>(
@@ -42,14 +65,23 @@ export class Canvas {
         return object;
     }
 
-    public sourceByDom(vNode: string, fNode: string) {
-        const [vertSrc, fragSrc] = [vNode, fNode].map(e => document.getElementById(e)).map((e: HTMLScriptElement) => e.text);
-        return { vertSrc, fragSrc };
-    }
-
-    public async sourceByFile(vPath: string, fPath: string) {
-        const [vertSrc, fragSrc] = await Promise.all([vPath, fPath].map(async p => await (await fetch(p)).text()));
-        return { vertSrc, fragSrc };
+    public newTexture(
+        image?: TexImageSource,
+        level = -1, // append to the first undefined level by default
+        size?: [number, number]
+    ) {
+        if (level === -1) {
+            level = this.textureInfos.reduce((i, info) => info ? i + 1 : i, 0);
+        }
+        if (this.textureInfos[level]) { // update the existing texture
+            this.gl.initTexture(image, level, this.textureInfos[level]);
+        } else if (image) { // create a new texture by image
+            const texture = this.gl.initTexture(image, level);
+            this.textureInfos[level] = { texture, level };
+        } else { // create an empty image and bind a frame buffer
+            this.textureInfos[level] = this.gl.createFrameBufferInfo(size ? size : this.size, level);
+        }
+        return this.textureInfos[level];
     }
 
     public render(anime?: boolean) {
@@ -110,17 +142,6 @@ export class Canvas {
         }
 
         requestAnimationFrame(mainLoop);
-    }
-
-    /*
-        Input: Vec2 in [width, height] origining at top-left
-        Output: Vec2 in [-1, 1] of clip space origining at bottom-left
-    */
-    public normVec2D(vec: [number, number]): [number, number] {
-        return [
-            2 * vec[0] / this.size[0] - 1,
-            2 * (this.size[1] - vec[1]) / this.size[1] - 1
-        ];
     }
 }
 

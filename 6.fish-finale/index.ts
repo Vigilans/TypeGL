@@ -13,17 +13,27 @@ import "../core/texture.js"
 
 let c = new Canvas("canvas");
 
-async function main() {
-    let sphereArray = [];
+async function main() {    
+    // prepare shaders
     const normalShader = await c.sourceByFile("shaders/normal.glslv", "shaders/normal.glslf");
     const textureShader = await c.sourceByFile("shaders/texture.glslv", "shaders/texture.glslf");
 
+    // prepare textures
+    const [fish_aqua_DM, fish_aqua_NM, ground] = (await Promise.all([
+        "assets/fish-aqua/DM.jpg",
+        "assets/fish-aqua/NM.png",
+        "assets/ground.jpg"
+    ].map(url => loadImage(url)))).map(image => c.newTexture(image));
+
+    // draw plane
     const plane = c.drawPlane([0, 0, 0], "fill", textureShader, [0, 0, 0], 128, 128, 32, 32);
+    plane.bindTexture(ground);
 
-    //const sphere = c.drawSphere("#ffff00", "fill", textureShader, [10, 0.5, -10], 0.5, 32, 32);
-
+    // draw example sphere and cube
+    const sphere = c.drawSphere("#ffff00", "fill", textureShader, [10, 0.5, -10], 0.5, 32, 32);
     const cube = drawCube(normalShader);
 
+    // draw fish kun
     const fish_kun_attr = JSON.parse(await (await fetch("assets/fish-kun/model.json")).text());
     const fish_kun = c.newOrientedObject(
         normalShader, [0, 0, -1], [0, 1, 0], c.gl.TRIANGLES, fish_kun_attr, { 
@@ -31,20 +41,18 @@ async function main() {
         }
     );
 
+    // draw fish aqua
     const fish_aqua_raw = JSON.parse(await (await fetch("assets/fish-aqua/model.json")).text());
     const fish_aqua_attr = fish_aqua_raw.models[0].fields as WebGLAttributeMap;
     const fish_aqua = c.newOrientedObject(
         textureShader, [0, 0, 1], [0, 1, 0], c.gl.TRIANGLES, fish_aqua_attr
     );
-    const fish_aqua_DM = await loadImage("assets/fish-aqua/DM.jpg");
-    const fish_aqua_NM = await loadImage("assets/fish-aqua/NM.png");
-    const ground_texture = await loadImage("assets/ground.jpg");
-    plane.bindTexture(ground_texture);
-
     fish_aqua.bindTexture(fish_aqua_DM, fish_aqua_NM);
 
+    // draw fish bezier
     const fish_bezier = createFishWithCardioid(fish_kun, normalShader);
 
+    // prepare lighting
     const lighting = c.bindLighting({
         initialPos: [10, 15, 10],
         ambient:  [0.2, 0.2, 0.2, 1.0],
@@ -53,7 +61,7 @@ async function main() {
         distFactors: [1, 0.01, 0]
     });
 
-    // 让光源沿Y轴旋转
+    // rotate lighting by Y axis
     c.updatePipeline.push((cv, time, deltaTime) => {
         const R = MV.rotateY(2 * deltaTime);
         lighting.transform(R);
@@ -71,27 +79,26 @@ async function main() {
 
     c.bindCamera(50, undefined, [5, 0, 5]);
 
-    c.gl.activeTexture(c.gl.TEXTURE0);
- 
-    setInterval(()=>{
-        let x = randomNum(-80,80), y = randomNum(-1,15), z = randomNum(-80,80);
-        let newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32);
-        sphereArray.push(newSphere);
-        newSphere.bindColor([1.0, 1.0, 0.0, 1.0]);
-        c.bindShadowObject(newSphere,lighting);
-    },5000)
-    let totalScore = 0;
-    setInterval(function checkCollider(){
-        sphereArray.forEach((mySphere,INDEX)=>{
-            let isCollider = collider(fish_kun,mySphere);
-            if(isCollider){
-                mySphere.transform(MV.translate(100,1000,100));
-                sphereArray.splice(INDEX,1);
-                totalScore += 50;
-                document.getElementById("scoreShow").innerText="Score : " + totalScore;
-            }
-        })
-    },1000)
+    // let sphereArray = [];
+    // setInterval(()=>{
+    //     let x = randomNum(-80,80), y = randomNum(-1,15), z = randomNum(-80,80);
+    //     let newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32);
+    //     sphereArray.push(newSphere);
+    //     newSphere.bindColor([1.0, 1.0, 0.0, 1.0]);
+    //     c.bindShadowObject(newSphere,lighting);
+    // },5000)
+    // let totalScore = 0;
+    // setInterval(function checkCollider(){
+    //     sphereArray.forEach((mySphere,INDEX)=>{
+    //         let isCollider = collider(fish_kun,mySphere);
+    //         if(isCollider){
+    //             mySphere.transform(MV.translate(100,1000,100));
+    //             sphereArray.splice(INDEX,1);
+    //             totalScore += 50;
+    //             document.getElementById("scoreShow").innerText="Score : " + totalScore;
+    //         }
+    //     })
+    // },1000)
 
     c.render(true);
 }
@@ -105,13 +112,14 @@ function createFishWithCardioid(focusObj: WebGLOrientedObject, source: ShaderSou
 
     let fishAttr = gl3d.lathePoints(fishVerts, [0.002, 0.002, 0.002], [1, 0, 0], undefined, undefined, undefined, false, false);
     let fishObj = c.newOrientedObject(
-        source, [0, 1, 0], [1, 0, 0], c.gl.TRIANGLES, gl3d.generateNormals(fishAttr, Math.PI / 6), {
-            u_Ambient: [0.0, 1.0, 0.0, 1.0],
-            u_Diffuse: [0.4, 0.8, 0.4, 1.0],
-            u_Specular: [0.0, 0.4, 0.4, 1.0],
-            u_Shininess: 1.0
-        }
+        source, [0, 1, 0], [1, 0, 0], c.gl.TRIANGLES, gl3d.generateNormals(fishAttr, Math.PI / 6)
     );
+    fishObj.bindMaterial({
+        ambient:   [0.0, 1.0, 0.0, 1.0],
+        diffuse:   [0.4, 0.8, 0.4, 1.0],
+        specular:  [0.0, 0.4, 0.4, 1.0],
+        shininess: 1.0
+    });
 
     // // 画心形线
     c.updatePipeline.push((cv, time, deltaTime) => {
@@ -148,12 +156,13 @@ function drawCube(source: ShaderSource) {
             numComponents: 3,
             data: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1]
         }
-    }, {
-        u_Ambient: [0.0, 1.0, 0.0, 1.0],
-        u_Diffuse: [0.4, 0.8, 0.4, 1.0],
-        u_Specular: [0.0, 0.4, 0.4, 1.0],
-        u_Shininess: 300.0
-    })
+    });
+    cube.bindMaterial({
+        ambient: [0.0, 1.0, 0.0, 1.0],
+        diffuse: [0.4, 0.8, 0.4, 1.0],
+        specular: [0.0, 0.4, 0.4, 1.0],
+        shininess: 300.0
+    });
     cube.transform(MV.translate(-10, 0.5, -5));
     return cube;
 }

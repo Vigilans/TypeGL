@@ -1,6 +1,6 @@
 import * as MV from "./MV.js";
 import { Canvas } from "./canvas.js";
-import { WebGLUniformMap, ShaderSource, WebGLFrameBufferInfo } from "./webgl-extension.js";
+import { WebGLUniformMap, ShaderSource, WebGLTextureInfo } from "./webgl-extension.js";
 import { WebGLRenderingObject, normRgb } from "./webgl-object.js";
 import { createSphereVertices } from "./3d-geometry.js";
 
@@ -17,20 +17,17 @@ export function loadImage(url: string) {
 
 declare module "./webgl-object.js" {
     interface WebGLRenderingObject {
-        textureInfo?: WebGLFrameBufferInfo;
         bindColor(rgba: MV.Vector4D, shininess?: number) : void;
-        bindMaterial(
+        bindMaterial(material: {
             ambient: MV.Vector4D,
             diffuse?: MV.Vector4D,
             specular?: MV.Vector4D,
             shininess?: number
-        ) : void;
-        bindTexture(image?: TexImageSource, normalMap?: TexImageSource) : void;
+        }) : void;
+        bindTexture(image: WebGLTextureInfo, normalMap?: WebGLTextureInfo) : void;
         bindFrameBuffer(this: WebGLRenderingObject, size: [number, number]) : void;
     }
 }
-
-let curTexture = 0;
 
 Object.assign(WebGLRenderingObject.prototype, {
     
@@ -47,42 +44,29 @@ Object.assign(WebGLRenderingObject.prototype, {
         }
     },
 
-    bindMaterial(this: WebGLRenderingObject,
+    bindMaterial(this: WebGLRenderingObject, material: {
         ambient: MV.Vector4D,
-        diffuse: MV.Vector4D = MV.vec4(),
-        specular: MV.Vector4D = MV.vec4(),
-        shininess: number = 1.0
-    ) {
+        diffuse?: MV.Vector4D,
+        specular?: MV.Vector4D,
+        shininess?: number
+    }) {
         Object.assign(this.uniforms, {
-            u_Ambient: ambient,
-            u_Diffuse: diffuse,
-            u_Specular: specular,
-            u_Shininess: shininess,
+            u_Ambient:   material.ambient,
+            u_Diffuse:   material.diffuse   || MV.vec4(),
+            u_Specular:  material.specular  || MV.vec4(),
+            u_Shininess: material.shininess || 1.0,
             u_ColorSource: 0
         });
     },
 
     bindTexture(this: WebGLRenderingObject,
-        image: TexImageSource, // 源图片，也即 DiffuseMap
-        nMap?: TexImageSource   // 法线贴图(NormalMap)
+        image: WebGLTextureInfo, // 源图片，也即 DiffuseMap
+        nMap?: WebGLTextureInfo   // 法线贴图(NormalMap)
     ) {
-        const texture = this.gl.initTexture(image, (curTexture));
         Object.assign(this.uniforms, {
-            u_DiffuseMap: curTexture,
+            u_DiffuseMap: image.level,
+            u_NormalMap: nMap ? nMap.level : image.level,
             u_ColorSource: 1
         });
-        curTexture = (curTexture + 1) % 32;
-        if (nMap) {
-            this.gl.initTexture(nMap, curTexture);
-            this.uniforms.u_NormalMap = curTexture;
-            curTexture = (curTexture + 1) % 32;
-        } else {
-            this.uniforms.u_NormalMap = curTexture - 1;
-        }
-        this.textureInfo = { texture };
     },
-
-    bindFrameBuffer(this: WebGLRenderingObject, size: [number, number]) {
-        this.textureInfo = this.gl.createFrameBufferInfo(size, 0);
-    }
 });

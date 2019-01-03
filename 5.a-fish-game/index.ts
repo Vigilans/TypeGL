@@ -36,12 +36,11 @@ async function main() {
     const fish_aqua = c.newOrientedObject(
         textureShader, [0, 0, 1], [0, 1, 0], c.gl.TRIANGLES, fish_aqua_attr
     );
-    const fish_aqua_DM = await loadImage("fish-aqua/fish-aqua-DM.jpg");
-    const fish_aqua_NM = await loadImage("fish-aqua/fish-aqua-NM.png");
-
-    const ball_texture = await loadImage("eyeball.jpg");
-    const ground_texture = await loadImage("ground.jpg");
-    plane.bindTexture(ground_texture);
+    const fish_aqua_DM = c.newTexture(await loadImage("fish-aqua/fish-aqua-DM.jpg"));
+    const fish_aqua_NM = c.newTexture(await loadImage("fish-aqua/fish-aqua-NM.png"));
+    const ball_texture = c.newTexture(await loadImage("eyeball.jpg"));
+    const ground = c.newTexture(await loadImage("ground.jpg"));
+    plane.bindTexture(ground);
 
     fish_aqua.bindTexture(fish_aqua_DM, fish_aqua_NM);
 

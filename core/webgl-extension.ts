@@ -32,10 +32,11 @@ export interface WebGLProgramInfo {
     uniformSetters: { [key: string]: (info: WebGLUniformType) => void };
 }
 
-export interface WebGLFrameBufferInfo {
+export interface WebGLTextureInfo {
     frameBuffer?: WebGLFramebuffer;
     renderBuffer?: WebGLRenderbuffer;
     texture: WebGLTexture;
+    level: number;
 }
 
 export type ShaderSource = { vertSrc: string, fragSrc: string };
@@ -46,10 +47,10 @@ declare global {
         getArrayType(this: WebGLRenderingContext, type: number): typeof Int8Array | typeof Float32Array;
         initShader(this: WebGLRenderingContext, code: string, type: number): WebGLShader | null;
         initProgram(this: WebGLRenderingContext, vShader: WebGLShader, fShader: WebGLShader): WebGLProgram | null;
-        initTexture(this: WebGLRenderingContext, image: TexImageSource, unit?: number): WebGLTexture;
+        initTexture(this: WebGLRenderingContext, image: TexImageSource, unit?: number, texture?: WebGLTexture): WebGLTexture;
         createBufferInfo(this: WebGLRenderingContext, attributes: WebGLAttributeMap) : WebGLBufferInfo;
         createProgramInfo(this: WebGLRenderingContext, program: WebGLProgram, mode: number): WebGLProgramInfo;
-        createFrameBufferInfo(this: WebGLRenderingContext, size: [number, number], level?: number): WebGLFrameBufferInfo;
+        createFrameBufferInfo(this: WebGLRenderingContext, size: [number, number], level?: number): WebGLTextureInfo;
     }
 
     // 为 Array 补充方法
@@ -198,8 +199,11 @@ Object.assign(WebGLRenderingContext.prototype, {
         return programInfo;
     },
 
-    initTexture(this: WebGLRenderingContext, image: TexImageSource, level = 0) {
-        const texture = this.createTexture();
+    initTexture(this: WebGLRenderingContext, 
+        image: TexImageSource, 
+        level = 0, 
+        texture = this.createTexture() // an out texture could be passed
+    ) {
         this.activeTexture(this.TEXTURE0 + level);
         this.bindTexture(this.TEXTURE_2D, texture);
         this.texImage2D(this.TEXTURE_2D, 0, this.RGBA, this.RGBA, this.UNSIGNED_BYTE, image);
@@ -222,7 +226,7 @@ Object.assign(WebGLRenderingContext.prototype, {
             frameBuffer: this.createFramebuffer(),
             renderBuffer: this.createRenderbuffer(),
             texture: this.createTexture()
-        } as WebGLFrameBufferInfo;
+        } as WebGLTextureInfo;
         
         // 绑定帧缓冲与渲染缓冲
         this.bindFramebuffer(this.FRAMEBUFFER, info.frameBuffer);
@@ -235,16 +239,15 @@ Object.assign(WebGLRenderingContext.prototype, {
         );
 
         // 设置当前贴图对象
-        this.activeTexture(this[`TEXTURE${level}`]);
+        this.activeTexture(this.TEXTURE0 + level);
         this.bindTexture(this.TEXTURE_2D, info.texture);
         this.framebufferTexture2D( // 把贴图对象也绑定到帧缓冲中
             this.FRAMEBUFFER, this.COLOR_ATTACHMENT0,
             this.TEXTURE_2D, info.texture, level
         );
-        const pixels = new Uint8Array(Array(size[0]*size[1]*4).fill(0.0));
-        this.texImage2D( // 传入一个仅有1像素的贴图
+        this.texImage2D( // 不传入图像指针
             this.TEXTURE_2D, level, this.RGBA, size[0], size[1], 0,
-            this.RGBA, this.UNSIGNED_BYTE, pixels
+            this.RGBA, this.UNSIGNED_BYTE, null
         );
         this.texParameteri( // 设置贴图对象的属性
             this.TEXTURE_2D, this.TEXTURE_MIN_FILTER, this.LINEAR
