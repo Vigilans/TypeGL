@@ -60,5 +60,13 @@
             "sourceMaps": true,
             "url": "http://localhost:8080/5.a-fish-game"
         },
+        {
+            "name": "6.fish-finale",
+            "type": "chrome",
+            "request": "launch",
+            "webRoot": "${workspaceRoot}/dist",
+            "sourceMaps": true,
+            "url": "http://localhost:8080/6.fish-finale"
+        },
     ]
 }

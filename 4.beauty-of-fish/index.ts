@@ -40,13 +40,14 @@ async function main() {
 
     const fish_bezier = createFishWithCardioid(fish_kun, source);
 
-    const lighting = c.bindLighting(
-        [10, 15, 10], 
-        [0.2, 0.2, 0.2, 1.0], 
-        [1.0, 1.0, 1.0, 1.0], 
-        [1.0, 1.0, 1.0, 1.0],
-        [1, 0.01, 0]
-    );
+    const lighting = c.bindLighting({
+        initialPos: [10, 15, 10],
+        ambient:  [0.2, 0.2, 0.2, 1.0],
+        diffuse:  [1.0, 1.0, 1.0, 1.0],
+        specular: [1.0, 1.0, 1.0, 1.0],
+        distFactors: [1, 0.01, 0]
+    });
+
 
     // 让光源沿Y轴旋转
     c.updatePipeline.push((cv, time, deltaTime) => {

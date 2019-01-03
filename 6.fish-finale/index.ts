@@ -15,8 +15,8 @@ let c = new Canvas("canvas");
 
 async function main() {
     let sphereArray = [];
-    const normalShader = await c.sourceByFile("normal-shader.glslv", "normal-shader.glslf");
-    const textureShader = await c.sourceByFile("texture-shader.glslv", "texture-shader.glslf");
+    const normalShader = await c.sourceByFile("shaders/normal.glslv", "shaders/normal.glslf");
+    const textureShader = await c.sourceByFile("shaders/texture.glslv", "shaders/texture.glslf");
 
     const plane = c.drawPlane([0, 0, 0], "fill", textureShader, [0, 0, 0], 128, 128, 32, 32);
 
@@ -24,23 +24,21 @@ async function main() {
 
     const cube = drawCube(normalShader);
 
-    const fish_kun_attr = JSON.parse(await (await fetch("fish-kun.json")).text());
+    const fish_kun_attr = JSON.parse(await (await fetch("assets/fish-kun/model.json")).text());
     const fish_kun = c.newOrientedObject(
         normalShader, [0, 0, -1], [0, 1, 0], c.gl.TRIANGLES, fish_kun_attr, { 
             u_Color: MV.vec4(normRgb("rgb(47, 79, 139)"))
         }
     );
 
-    const fish_aqua_raw = JSON.parse(await (await fetch("fish-aqua/fish-aqua.json")).text());
+    const fish_aqua_raw = JSON.parse(await (await fetch("assets/fish-aqua/model.json")).text());
     const fish_aqua_attr = fish_aqua_raw.models[0].fields as WebGLAttributeMap;
     const fish_aqua = c.newOrientedObject(
         textureShader, [0, 0, 1], [0, 1, 0], c.gl.TRIANGLES, fish_aqua_attr
     );
-    const fish_aqua_DM = await loadImage("fish-aqua/fish-aqua-DM.jpg");
-    const fish_aqua_NM = await loadImage("fish-aqua/fish-aqua-NM.png");
-
-    const ball_texture = await loadImage("eyeball.jpg");
-    const ground_texture = await loadImage("ground.jpg");
+    const fish_aqua_DM = await loadImage("assets/fish-aqua/DM.jpg");
+    const fish_aqua_NM = await loadImage("assets/fish-aqua/NM.png");
+    const ground_texture = await loadImage("assets/ground.jpg");
     plane.bindTexture(ground_texture);
 
     fish_aqua.bindTexture(fish_aqua_DM, fish_aqua_NM);
@@ -54,7 +52,6 @@ async function main() {
         specular: [1.0, 1.0, 1.0, 1.0],
         distFactors: [1, 0.01, 0]
     });
-
 
     // 让光源沿Y轴旋转
     c.updatePipeline.push((cv, time, deltaTime) => {
@@ -77,10 +74,10 @@ async function main() {
     c.gl.activeTexture(c.gl.TEXTURE0);
  
     setInterval(()=>{
-        let x = randomNum(-80,80), y = randomNum(-1,15), z = randomNum(-80,80)
-        let newSphere;
-        sphereArray.push(newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32))
-        newSphere.bindTexture(ball_texture);
+        let x = randomNum(-80,80), y = randomNum(-1,15), z = randomNum(-80,80);
+        let newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32);
+        sphereArray.push(newSphere);
+        newSphere.bindColor([1.0, 1.0, 0.0, 1.0]);
         c.bindShadowObject(newSphere,lighting);
     },5000)
     let totalScore = 0;
