@@ -30,6 +30,7 @@ class DefaultController extends Controller {
             case 'Q': { // 缩放
                 const delta = sgn * this.speed * 0.05;
                 this.S = MV.add(MV.scalem(delta, delta, delta), this.S); // 加法保证线性缩放
+                this.S[3][3] = 1.0;
                 if (this.S[0][0] <= 0) {
                     this.S = MV.mat4();
                 }
@@ -74,7 +75,8 @@ class OrientedController extends Controller {
             case 'Q': { // 缩放
                 const delta = sgn * this.speed * 0.05;
                 this.S = MV.add(MV.scalem(delta, delta, delta), this.S); // 加法保证线性缩放
-                if (this.S[0][0] <= 0) {
+                this.S[3][3] = 1.0;
+                if (this.S[0][0] <= 0.0) {
                     this.S = MV.mat4();
                 }
                 break;
@@ -158,6 +160,7 @@ Object.assign(Canvas.prototype, {
             this.updatePipeline.push(c => {
                 const controllers = firstUpdated ? [c.curCtrl] : c.controllers; 
                 for (const ctrl of controllers) {
+                    //ctrl.S = MV.scalem(ctrl.scale, ctrl.scale, ctrl.scale);
                     ctrl.obj.setModel(MV.mult(ctrl.T, ctrl.R, ctrl.S));
                 }
                 firstUpdated = true;
