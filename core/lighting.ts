@@ -37,14 +37,14 @@ export class WebGLLightingObject extends WebGLRenderingObject {
 
 declare module "./canvas.js" {
     interface Canvas {
-        bindLighting(
+        bindLighting(option: {
             initialPos: MV.Vector3D,
             ambient: MV.Vector4D,
             diffuse: MV.Vector4D,
             specular: MV.Vector4D,
             distFactors?: MV.Vector3D,
-            drawSphere?: boolean
-        ) : WebGLLightingObject;
+            drawSphere?: boolean   
+        }) : WebGLLightingObject;
         bindShadowObject(
             srcObj: WebGLRenderingObject,
             light: WebGLLightingObject
@@ -53,15 +53,22 @@ declare module "./canvas.js" {
 }
 
 Object.assign(Canvas.prototype, {
-    bindLighting(this: Canvas,
+    bindLighting(this: Canvas, option: {
         initialPos: MV.Vector3D,
         ambient: MV.Vector4D,
         diffuse: MV.Vector4D,
         specular: MV.Vector4D,
-        distFactors: MV.Vector3D = [1, 0, 0],
-        drawSphere = true
-    ) {
-        let light = new WebGLLightingObject(this.gl,
+        distFactors: MV.Vector3D,
+        drawSphere: boolean
+    }) {
+        const { // set default value and extract properties
+            initialPos, ambient, diffuse, specular, distFactors, drawSphere 
+        } = Object.assign(option, {
+            distFactors: MV.vec3(1.0, 0.0, 0.0),
+            drawSphere: true
+        }, option); 
+
+        const light = new WebGLLightingObject(this.gl,
             initialPos, ambient, diffuse, specular, distFactors, drawSphere
         );
         this.objectsToDraw.push(light);
