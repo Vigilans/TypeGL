@@ -1,6 +1,7 @@
 const gulp = require('gulp');
 const connect = require('gulp-connect');
 const os = require('os');
+const fileExts = 'html|js|json|glsl[vf]|jpg|png'
 
 gulp.task('connect', () => 
     connect.server({
@@ -14,12 +15,12 @@ gulp.task('reload', () => {
 });
 
 gulp.task('copy', () => {
-    gulp.src('./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])').pipe(gulp.dest('./dist'));
+    gulp.src(`./@(core|+([0-9]).+(?))/**/*.@(${fileExts})`).pipe(gulp.dest('./dist'));
 });
 
 gulp.task('watch', () => {
-    gulp.watch('./@(core|+([0-9]).+(?))/**/*.@(html|js|json|glsl[vf])', gulp.series('copy'));
-    gulp.watch('./dist/**/*.@(html|js|json|glsl[vf])', gulp.series('reload'));
+    gulp.watch(`./@(core|+([0-9]).+(?))/**/*.@(${fileExts})`, gulp.series('copy'));
+    gulp.watch(`./dist/**/*.@(${fileExts})`, gulp.series('reload'));
 });
 
 gulp.task('compile', () => {
