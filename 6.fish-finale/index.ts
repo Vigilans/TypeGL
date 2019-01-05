@@ -30,7 +30,7 @@ async function main() {
     plane.bindTexture(ground);
 
     // draw example sphere and cube
-    const sphere = c.drawSphere("#ffff00", "fill", textureShader, [10, 0.5, -10], 0.5, 32, 32);
+    // const sphere = c.drawSphere("#ffff00", "fill", textureShader, [10, 0.5, -10], 0.5, 32, 32);
     const cube = drawCube(normalShader);
 
     // draw fish kun
@@ -54,7 +54,7 @@ async function main() {
 
     // prepare lighting
     const lighting = c.bindLighting({
-        initialPos: [10, 15, 10],
+        initialPos: [40, 20, 40],
         ambient:  [0.2, 0.2, 0.2, 1.0],
         diffuse:  [1.0, 1.0, 1.0, 1.0],
         specular: [1.0, 1.0, 1.0, 1.0],
@@ -73,32 +73,32 @@ async function main() {
     c.bindShadowObject(fish_aqua, lighting);
     c.bindShadowObject(fish_bezier, lighting);
 
-    c.bindController(fish_kun);
-    c.bindController(fish_aqua, { offset: [6, 0, 7], rotate: [0, -4 * Math.PI / 5, 0] });
+    c.bindController(fish_kun, { offset: [0, 4, 0] });
+    c.bindController(fish_aqua, { offset: [6, 2, 7], rotate: [0, -4 * Math.PI / 5, 0] });
     c.bindController(lighting,  { offset: lighting.center });
 
     c.bindCamera(50, undefined, [5, 0, 5]);
 
-    // let sphereArray = [];
-    // setInterval(()=>{
-    //     let x = randomNum(-80,80), y = randomNum(-1,15), z = randomNum(-80,80);
-    //     let newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32);
-    //     sphereArray.push(newSphere);
-    //     newSphere.bindColor([1.0, 1.0, 0.0, 1.0]);
-    //     c.bindShadowObject(newSphere,lighting);
-    // },5000)
-    // let totalScore = 0;
-    // setInterval(function checkCollider(){
-    //     sphereArray.forEach((mySphere,INDEX)=>{
-    //         let isCollider = collider(fish_kun,mySphere);
-    //         if(isCollider){
-    //             mySphere.transform(MV.translate(100,1000,100));
-    //             sphereArray.splice(INDEX,1);
-    //             totalScore += 50;
-    //             document.getElementById("scoreShow").innerText="Score : " + totalScore;
-    //         }
-    //     })
-    // },1000)
+    let sphereArray = [];
+    setInterval(()=>{
+        let x = randomNum(-80,80), y = 4, z = randomNum(-80,80);
+        let newSphere = c.drawSphere("#ffff00","fill",textureShader,[x,y,z],0.5,32,32);
+        sphereArray.push(newSphere);
+        newSphere.bindColor([1.0, 1.0, 0.0, 1.0]);
+        //c.bindShadowObject(newSphere,lighting);
+    },5000)
+    let totalScore = 0;
+    setInterval(function checkCollider(){
+        sphereArray.forEach((mySphere,INDEX)=>{
+            let isCollider = collider(fish_kun,mySphere);
+            if(isCollider){
+                mySphere.transform(MV.translate(100,1000,100));
+                sphereArray.splice(INDEX,1);
+                totalScore += 50;
+                document.getElementById("scoreShow").innerText="Score : " + totalScore;
+            }
+        })
+    },1000)
 
     c.render(true);
 }

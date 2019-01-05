@@ -17,7 +17,7 @@ varying vec4 v_DiffuseColor;
 
 void main() {
     vec3 N;
-    vec3 L = normalize(v_L);
+    vec3 L = v_L;
     vec3 H = normalize(v_L + v_E);
 
     if (u_ColorSource == 1) {
@@ -25,13 +25,15 @@ void main() {
     } else {
         N = v_N;
     }
-    float Kd = dot(N, L);
-    float Ks = pow(max(dot(N, H), 0.0), u_Shininess);
-    if (Kd < 0.0) {
-        Ks = Kd = 0.0;
-    }
+    float Kd = max(dot(N, L), 0.0);
     vec4 Diffuse = u_Diffuse * Kd;
+    
+    float Ks = pow(max(dot(N, H), 0.0), u_Shininess);
     vec4 Specular = u_Specular * Ks;
+    if (dot(N, L) < 0.0) {
+        Specular = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+
     vec4 Intensity = u_Ambient + (Diffuse + Specular) * u_Attenuation;
 
     if (u_ColorSource == 1) {
