@@ -1,8 +1,6 @@
 import * as MV from "./MV.js";
-import { Canvas } from "./canvas.js";
-import { WebGLUniformMap, ShaderSource, WebGLTextureInfo } from "./webgl-extension.js";
-import { WebGLRenderingObject, normRgb } from "./webgl-object.js";
-import { createSphereVertices } from "./3d-geometry.js";
+import { WebGLTextureInfo } from "./webgl-extension.js";
+import { WebGLRenderingObject } from "./webgl-object.js";
 
 export function loadImage(url: string) {
     return new Promise<HTMLImageElement>((resolve, reject) => {

@@ -99,7 +99,7 @@ Object.assign(Canvas.prototype, {
                 // 如果对象有材质，则光照起增强效果
                 if (obj.uniforms.u_DiffuseMap !== undefined) {
                     // 强化环境光的效果
-                    uniforms.u_Ambient = MV.scale(4.0, <MV.Vector4D>uniforms.u_Ambient);
+                    uniforms.u_Ambient = MV.scale(2.0, <MV.Vector4D>uniforms.u_Ambient);
                     uniforms.u_Ambient[3] = 1.0;
                 }
                 Object.assign(obj.uniforms, uniforms);
