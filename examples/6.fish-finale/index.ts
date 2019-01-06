@@ -1,15 +1,15 @@
-import { Canvas } from "../core/canvas.js";
-import { WebGLAttributeMap, ShaderSource } from "../core/webgl-extension.js";
-import { WebGLOrientedObject, normRgb } from "../core/webgl-object.js";
-import { loadImage } from "../core/texture.js";
-import * as MV from "../core/MV.js"
-import * as gl2d from "../core/2d-figures.js"
-import * as gl3d from "../core/3d-geometry.js"
-import "../core/3d-geometry.js"
-import "../core/camera.js"
-import "../core/controller.js"
-import "../core/lighting.js"
-import "../core/texture.js"
+import { Canvas } from "../../core/canvas.js";
+import { WebGLAttributeMap, ShaderSource } from "../../core/webgl-extension.js";
+import { WebGLOrientedObject, normRgb } from "../../core/webgl-object.js";
+import { loadImage } from "../../core/texture.js";
+import * as MV from "../../core/MV.js"
+import * as gl2d from "../../core/2d-figures.js"
+import * as gl3d from "../../core/3d-geometry.js"
+import "../../core/3d-geometry.js"
+import "../../core/camera.js"
+import "../../core/controller.js"
+import "../../core/lighting.js"
+import "../../core/texture.js"
 
 let c = new Canvas("canvas");
 
@@ -184,8 +184,8 @@ function randomNum(minNum,maxNum){ //生成从minNum到maxNum的随机数
 }
 
 function collider(ObjectA,ObjectB){
-    let posA = ObjectA.getCenter();
-    let posB = ObjectB.getCenter();
+    let posA = ObjectA.center;
+    let posB = ObjectB.center;
     let dis = [posB[0]-posA[0],posB[1]-posA[1],posB[2]-posA[2]];
     //console.log(posA,posB,dis,length(dis))
     if(MV.length(dis) < 5) return true;

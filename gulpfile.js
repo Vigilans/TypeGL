@@ -15,11 +15,11 @@ gulp.task('reload', () => {
 });
 
 gulp.task('copy', () => {
-    gulp.src(`./@(core|+([0-9]).+(?))/**/*.@(${fileExts})`).pipe(gulp.dest('./dist'));
+    gulp.src(`./@(core|examples)/**/*.@(${fileExts})`).pipe(gulp.dest('./dist'));
 });
 
 gulp.task('watch', () => {
-    gulp.watch(`./@(core|+([0-9]).+(?))/**/*.@(${fileExts})`, gulp.series('copy'));
+    gulp.watch(`./@(core|examples)/**/*.@(${fileExts})`, gulp.series('copy'));
     gulp.watch(`./dist/**/*.@(${fileExts})`, gulp.series('reload'));
 });
 

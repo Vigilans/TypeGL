@@ -10,7 +10,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/0.quickstart"
+            "url": "http://localhost:8080/examples/0.quickstart"
         },
         {
             "name": "QuickStart On TS",
@@ -18,7 +18,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/0.quickstart_ts"
+            "url": "http://localhost:8080/examples/0.quickstart_ts"
         },        
         {
             "name": "1.peppa-pig",
@@ -26,7 +26,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/1.peppa-pig"
+            "url": "http://localhost:8080/examples/1.peppa-pig"
         },
         {
             "name": "2.i-is-fish",
@@ -34,7 +34,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/2.i-is-fish"
+            "url": "http://localhost:8080/examples/2.i-is-fish"
         },
         {
             "name": "3.more-fish-more",
@@ -42,7 +42,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/3.more-fish-more"
+            "url": "http://localhost:8080/examples/3.more-fish-more"
         },
         {
             "name": "4.beauty-of-fish",
@@ -50,7 +50,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/4.beauty-of-fish"
+            "url": "http://localhost:8080/examples/4.beauty-of-fish"
         },        
         {
             "name": "5.a-fish-game",
@@ -58,7 +58,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/5.a-fish-game"
+            "url": "http://localhost:8080/examples/5.a-fish-game"
         },
         {
             "name": "6.fish-finale",
@@ -66,7 +66,7 @@
             "request": "launch",
             "webRoot": "${workspaceRoot}/dist",
             "sourceMaps": true,
-            "url": "http://localhost:8080/6.fish-finale"
+            "url": "http://localhost:8080/examples/6.fish-finale"
         },
     ]
 }

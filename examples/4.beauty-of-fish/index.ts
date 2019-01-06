@@ -1,13 +1,13 @@
-import { Canvas } from "../core/canvas.js";
-import { WebGLAttributeMap, ShaderSource } from "../core/webgl-extension.js";
-import { WebGLOrientedObject, normRgb } from "../core/webgl-object.js";
-import * as MV from "../core/MV.js"
-import * as gl2d from "../core/2d-figures.js"
-import * as gl3d from "../core/3d-geometry.js"
-import "../core/3d-geometry.js"
-import "../core/camera.js"
-import "../core/controller.js"
-import "../core/lighting.js"
+import { Canvas } from "../../core/canvas.js";
+import { WebGLAttributeMap, ShaderSource } from "../../core/webgl-extension.js";
+import { WebGLOrientedObject, normRgb } from "../../core/webgl-object.js";
+import * as MV from "../../core/MV.js"
+import * as gl2d from "../../core/2d-figures.js"
+import * as gl3d from "../../core/3d-geometry.js"
+import "../../core/3d-geometry.js"
+import "../../core/camera.js"
+import "../../core/controller.js"
+import "../../core/lighting.js"
 
 let c = new Canvas("canvas");
 

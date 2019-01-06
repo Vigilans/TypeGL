@@ -1,5 +1,5 @@
-import { Canvas } from "../core/canvas.js";
-import "../core/2d-figures.js"
+import { Canvas } from "../../core/canvas.js";
+import "../../core/2d-figures.js"
 
 async function main() {
     let canvas = new Canvas("canvas");
@@ -76,6 +76,7 @@ async function main() {
     canvas.drawBezierCurve("#d55f9b", [[326, 628], [356, 689], [460, 654], [449, 594]], "stroke");
 
     canvas.render();
+    canvas.gl.disable(canvas.gl.DEPTH_TEST);
 }
 
 main();

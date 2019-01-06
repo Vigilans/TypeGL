@@ -1,6 +1,6 @@
-import { Canvas } from "../core/canvas.js";
-import { WebGLAttribute } from "../core/webgl-extension.js";
-import * as MV from "../core/MV.js"
+import { Canvas } from "../../core/canvas.js";
+import { WebGLAttribute } from "../../core/webgl-extension.js";
+import * as MV from "../../core/MV.js"
 
 interface Controller {
     rotateAngle?: number;

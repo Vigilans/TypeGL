@@ -1,6 +1,6 @@
-import { Canvas } from "../core/canvas.js";
-import "../core/2d-figures.js"
-import { WebGLAttributeMap } from "../core/webgl-extension.js";
+import { Canvas } from "../../core/canvas.js";
+import "../../core/2d-figures.js"
+import { WebGLAttributeMap } from "../../core/webgl-extension.js";
 
 async function main() {
     let canvas = new Canvas("canvas");
