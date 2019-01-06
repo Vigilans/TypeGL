@@ -99,6 +99,8 @@ export class Canvas {
             }
             then = now;
 
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
             for (let obj of this.objectsToDraw) {
                 let bindBuffers = false;
                 

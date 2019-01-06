@@ -19,9 +19,7 @@ export class WebGLRenderingObject {
             u_WorldMatrix: MV.flatten(this.worldMatrix)
         };
     }
-
-    getCenter(){return this.center;}
-
+    
     // 直接设置MV矩阵
     setModel(m: MV.Matrix) {
         this.worldMatrix = m;
