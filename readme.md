@@ -1,4 +1,4 @@
-# CG-18-19-2
+# TypeGL
 
 ## Prerequisites
 
