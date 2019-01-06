@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas</title>
+    <style type="text/css">
+        #canvas {
+            border: thin solid blue;
+        }
+    </style>
+</head>
+<body>
+    <div style="width:1600px;margin:0;padding:0">
+        <div style="float:left;width:1220px;">
+            <canvas id="canvas" width="1200" height="800" style="border:10px dotted #000000; background:#ddd;"
+                , oncontextmenu="return false;" , z-index: 0></canvas>
+        </div>
+        <div id="scoreShow" style="float:left; width:320px; font:bold;font-size:2em; text-align: center">Score: 0</div>
+        <br/>
+        <div style="float:right;width:300px; font-family:'Courier New', Courier, monospace">
+            <br>
+            交互说明:<br/>
+            <br/>
+            1: 控制Fish_kun<br/>
+            2: 控制Fish_aqua<br/>
+            3: 控制光源<br/>
+            <br/>
+            有向物体（如鱼）控制方式：<br/>
+            Q/E: 放大/缩小<br/>
+            W/S: 前进/后退<br/>
+            A/D: 沿法线旋转<br/>
+            ←/→: 沿朝向旋转<br/>
+            ↑/↓: 沿法线×朝向旋转<br/>
+            <br/>
+            一般物体（如光源）控制方式：<br/>
+            Q/E: 放大/缩小<br/>
+            ←/→: 沿X轴移动<br/>
+            ↑/↓: 沿Y轴移动<br/>
+            W/S: 沿Z轴移动<br/>
+            A/D: 沿Y轴旋转<br/>
+            <br/>
+            相机控制方式：<br/>
+            左键: 在聚焦球上旋转<br/>
+            中键: 在聚焦球直径上平移相机<br/>
+            右键: 在聚焦球切面上平移相机<br/>
+            <br/>
+            （聚焦球是指以聚焦点为圆心，聚焦点到相机位置的距离为半径的球面。）
+        </div>
+        <div style="clear:both"></div>
+    </div>
+    <script src = "index.js", type = "module"></script> 
+</body>
+
+</html>
