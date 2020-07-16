@@ -10,45 +10,45 @@
     </style>
 </head>
 <body>
-    <div style="width:1600px;margin:0;padding:0">
+    <div style="width:1800px;margin:0;padding:0">
         <div style="float:left;width:1220px;">
             <canvas id="canvas" width="1200" height="800" style="border:10px dotted #000000; background:#ddd;"
                 , oncontextmenu="return false;" , z-index: 0></canvas>
         </div>
-        <div id="scoreShow" style="float:left; width:320px; font:bold;font-size:2em; text-align: center">Score: 0</div>
-        <br/>
-        <div style="float:right;width:300px; font-family:'Courier New', Courier, monospace">
+        <div id="scoreShow" style="float:left; width:400px; font:bold;font-size:2em; text-align: center">Score: 0</div>
+        <br/><br/><br/><br/>
+        <div style="float:right;width:500px; font-size: large; font-family:'Courier New', Courier, monospace">
             <br>
-            交互说明:<br/>
+            Keyboard Control Guidance:<br/>
             <br/>
-            1: 控制Fish_kun<br/>
-            2: 控制Fish_aqua<br/>
-            3: 控制光源<br/>
+            1: Control Fish_kun<br/>
+            2: Control Fish_aqua<br/>
+            3: Control Light Source<br/>
             <br/>
-            有向物体（如鱼）控制方式：<br/>
-            Q/E: 放大/缩小<br/>
-            W/S: 前进/后退<br/>
-            A/D: 沿法线旋转<br/>
-            ←/→: 沿朝向旋转<br/>
-            ↑/↓: 沿法线×朝向旋转<br/>
+            Oriented Objects (e.g. Fish):<br/>
+            Q/E: Scale Up/Scale Down<br/>
+            W/S: Move fowared/Move backward<br/>
+            A/D: Rotate along normal<br/>
+            ←/→: Rotate along orientation<br/>
+            ↑/↓: Rotate along normal × orient<br/>
             <br/>
-            一般物体（如光源）控制方式：<br/>
-            Q/E: 放大/缩小<br/>
-            ←/→: 沿X轴移动<br/>
-            ↑/↓: 沿Y轴移动<br/>
-            W/S: 沿Z轴移动<br/>
-            A/D: 沿Y轴旋转<br/>
+            Simple Objects (e.g. Light Source):<br/>
+            Q/E: Scale Up/Scale Down<br/>
+            ←/→: Move by X axis<br/>
+            ↑/↓: Move by Y axis<br/>
+            W/S: Move by Z axis<br/>
+            A/D: Rotate along Y axis<br/>
             <br/>
-            相机控制方式：<br/>
-            左键: 在聚焦球上旋转<br/>
-            中键: 在聚焦球直径上平移相机<br/>
-            右键: 在聚焦球切面上平移相机<br/>
+            Camera：<br/>
+            Left Click:   Rotate along focus ball<br/>
+            Middle Click: Move along diameter<br/>
+            Right Click:  Move along tanget plane<br/>
             <br/>
-            （聚焦球是指以聚焦点为圆心，聚焦点到相机位置的距离为半径的球面。）
+            (Focus ball refers to the sphere whose heart set on focus point, with a radius of the distance between the foucs point and the camera)
         </div>
         <div style="clear:both"></div>
     </div>
-    <script src = "index.js", type = "module"></script> 
+    <script src = "index.js", type = "module"></script>
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "noImplicitAny": false,
-        "watch": true,
+        "watch": false,
         "sourceMap": true,
         "target": "es2018",
         "outDir": "./dist",

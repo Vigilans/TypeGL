@@ -5,7 +5,7 @@
   "author": "yzh, lsc, zjd",
   "license": "MIT",
   "devDependencies": {
-    "gulp": "^4.0.0",
+    "gulp": "^4.0.2",
     "gulp-connect": "^5.7.0"
   },
   "dependencies": {
